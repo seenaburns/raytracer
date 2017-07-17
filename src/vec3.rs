@@ -51,7 +51,7 @@ impl Vec3 {
     }
 
     pub fn squared_length(self) -> f64 {
-        self.x*self.x + self.y*self.y * self.z*self.z
+        self.x*self.x + self.y*self.y + self.z*self.z
     }
 
     pub fn normalized(self) -> Vec3 {
@@ -103,5 +103,30 @@ impl Neg for Vec3 {
     type Output = Vec3;
     fn neg(self) -> Vec3 {
         Vec3 { x: -self.x, y: -self.y, z: -self.z, }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_scalar() {
+        assert!(Vec3::new(1.0,2.0,3.0).add_scalar(2.0) == Vec3::new(3.0,4.0,5.0))
+    }
+
+    #[test]
+    fn test_sub_scalar() {
+        assert!(Vec3::new(1.0,2.0,3.0).sub_scalar(2.0) == Vec3::new(-1.0,0.0,1.0))
+    }
+
+    #[test]
+    fn test_mul_scalar() {
+        assert!(Vec3::new(1.0,2.0,3.0).mul_scalar(2.0) == Vec3::new(2.0,4.0,6.0))
+    }
+
+    #[test]
+    fn test_div_scalar() {
+        assert!(Vec3::new(1.0,2.0,3.0).div_scalar(2.0) == Vec3::new(0.5,1.0,1.5))
     }
 }
