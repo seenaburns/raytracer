@@ -7,19 +7,26 @@ use std::io::{self, Write};
 const NX: i32 = 200;
 const NY: i32 = 100;
 
-fn hit_sphere(center: Vec3, radius: f64, ray: &Ray) -> bool {
-    let oc = ray.origin - center;
+fn hit_sphere(center: Vec3, radius: f64, ray: &Ray) -> f64 {
+    let oc: Vec3 = ray.origin - center;
     let a = ray.dir.dot(ray.dir);
     let b = 2.0 * oc.dot(ray.dir);
     let c = oc.dot(oc) - radius * radius;
     let discriminant = b*b - 4.0*a*c;
-    discriminant > 0.0
+    if (discriminant < 0.0) {
+        -1.0
+    } else {
+        (-b - discriminant.sqrt()) / (2.0 * a)
+    }
 }
 
 fn color(r: &Ray) -> Vec3 {
-    if (hit_sphere(Vec3::new(0.0,0.0,-1.0), 0.5, r)) {
+    let sphere = Vec3::new(0.0,0.0,-1.0);
+    let t = hit_sphere(sphere, 0.5, r);
+    if (t > 0.0) {
         // Sphere color
-        Vec3::new(1.0,0.0,0.0)
+        let n = r.point_at_parameter(t) - sphere;
+        return Vec3::new(n.x+1.0, n.y+1.0, n.z+1.0).mul_scalar(0.5);;
     } else {
         // Background
         let unit_dir = r.dir.normalized();
