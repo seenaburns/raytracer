@@ -25,7 +25,7 @@ fn color(r: &Ray) -> Vec3 {
     let t = hit_sphere(sphere, 0.5, r);
     if (t > 0.0) {
         // Sphere color
-        let n = r.point_at_parameter(t) - sphere;
+        let n = (r.point_at_parameter(t) - sphere).normalized();
         return Vec3::new(n.x+1.0, n.y+1.0, n.z+1.0).mul_scalar(0.5);;
     } else {
         // Background
@@ -34,6 +34,10 @@ fn color(r: &Ray) -> Vec3 {
         Vec3::new(1.0,1.0,1.0).mul_scalar(1.0-t) + Vec3::new(0.5, 0.7, 1.0).mul_scalar(t)
     }
 
+}
+
+fn float_eq(a: f64, b: f64) -> bool {
+    a - b < 0.0001
 }
 
 fn main() {

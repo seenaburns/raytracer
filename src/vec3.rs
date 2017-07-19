@@ -129,4 +129,41 @@ mod tests {
     fn test_div_scalar() {
         assert!(Vec3::new(1.0,2.0,3.0).div_scalar(2.0) == Vec3::new(0.5,1.0,1.5))
     }
+
+    #[test]
+    fn test_length() {
+        assert!(Vec3::new(-2.0,0.5,1.0).length() - 2.29129 < 0.00001)
+    }
+
+    #[test]
+    fn test_squared_length() {
+        assert!(Vec3::new(-2.0,1.0,1.0).squared_length() == 6.0)
+    }
+
+    #[test]
+    fn test_normalized() {
+        let v = Vec3::new(1.0,2.0,3.0);
+        let l = 14.0f64;
+        assert!(v.normalized() == v.div_scalar(l.sqrt()))
+    }
+
+    #[test]
+    fn test_normalized_unit() {
+        let v = Vec3::new(1.0,0.0,0.0);
+        assert!(v.normalized() == v)
+    }
+
+    #[test]
+    fn test_dot() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        let b = Vec3::new(4.0,5.0,6.0);
+        assert!(a.dot(b) == 32.0)
+    }
+
+    #[test]
+    fn test_cross() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        let b = Vec3::new(4.0,5.0,6.0);
+        assert!(a.cross(b) == Vec3::new(-3.0,6.0,-3.0))
+    }
 }
