@@ -1,5 +1,4 @@
 use std::ops::*;
-use std::cmp::PartialEq;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
