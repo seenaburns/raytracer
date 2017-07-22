@@ -12,8 +12,8 @@ use std::io::{self, Write};
 
 const NX: i32 = 200;
 const NY: i32 = 100;
-const NUM_SAMPLES: i32 = 64;
-const MAX_DISTANCE: f64 = 1000.0;
+const NUM_SAMPLES: i32 = 300;
+const MAX_DISTANCE: f64 = 100.0;
 
 fn random_in_unit_sphere() -> Vec3 {
     let mut rng = thread_rng();
@@ -78,6 +78,8 @@ fn main() {
             let c = c.div_scalar(NUM_SAMPLES as f64);
 
             // Output for PPM
+            // Gamma correct to 2: output color ^ (1/gamma) = x^(1/2) = sqrt
+            let c = c.map(&|x: f64| x.sqrt());
             let c = c.mul_scalar(255.99);
             println!("{} {} {}", c.x as i32, c.y as i32, c.z as i32);
         }
