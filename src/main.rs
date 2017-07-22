@@ -12,14 +12,25 @@ use std::io::{self, Write};
 
 const NX: i32 = 200;
 const NY: i32 = 100;
-const NUM_SAMPLES: i32 = 32;
+const NUM_SAMPLES: i32 = 64;
 const MAX_DISTANCE: f64 = 1000.0;
+
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rng = thread_rng();
+    loop {
+        let p = Vec3::new(rng.next_f64(), rng.next_f64(), rng.next_f64()).mul_scalar(2.0).sub_scalar(1.0);
+        if p.dot(p) >=  1.0 {
+            return p
+        }
+    }
+}
 
 fn color<T: Hitable>(r: &Ray, world: &HitableList<T>) -> Vec3 {
     match world.hit(r, 0.0, MAX_DISTANCE) {
         Some(h) => {
             // Sphere color
-            Vec3::new(h.normal.x+1.0, h.normal.y+1.0, h.normal.z+1.0).mul_scalar(0.5)
+            let target = h.p + h.normal + random_in_unit_sphere();
+            color(&Ray::new(h.p, target-h.p), world).mul_scalar(0.5)
         }
         None => {
             // Background
