@@ -1,5 +1,6 @@
 extern crate raytracer;
 extern crate rand;
+extern crate image;
 
 use raytracer::vec3::Vec3;
 use raytracer::ray::Ray;
@@ -9,24 +10,26 @@ use raytracer::camera::Camera;
 use rand::{thread_rng, Rng};
 
 use std::io::{self, Write};
+use std::path::Path;
 
 const NX: i32 = 200;
 const NY: i32 = 100;
-const NUM_SAMPLES: i32 = 300;
-const MAX_DISTANCE: f64 = 100.0;
+const NUM_SAMPLES: i32 = 100;
+const MIN_DISTANCE: f64 = 0.000001;
+const MAX_DISTANCE: f64 = 1000.0;
 
 fn random_in_unit_sphere() -> Vec3 {
     let mut rng = thread_rng();
     loop {
         let p = Vec3::new(rng.next_f64(), rng.next_f64(), rng.next_f64()).mul_scalar(2.0).sub_scalar(1.0);
-        if p.dot(p) >=  1.0 {
+        if p.dot(p) <=  1.0 {
             return p
         }
     }
 }
 
 fn color<T: Hitable>(r: &Ray, world: &HitableList<T>) -> Vec3 {
-    match world.hit(r, 0.0, MAX_DISTANCE) {
+    match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some(h) => {
             // Sphere color
             let target = h.p + h.normal + random_in_unit_sphere();
@@ -60,6 +63,8 @@ fn main() {
 
     let mut rng = thread_rng();
 
+    let mut outbuf: Vec<u8> = Vec::with_capacity((NX*NY*3) as usize);
+
     for j in (0..NY).rev() {
         for i in 0..NX {
             let mut c = Vec3::new(0.0, 0.0, 0.0);
@@ -82,6 +87,13 @@ fn main() {
             let c = c.map(&|x: f64| x.sqrt());
             let c = c.mul_scalar(255.99);
             println!("{} {} {}", c.x as i32, c.y as i32, c.z as i32);
+
+            // Save to buffer for image out
+            outbuf.push(c.x as u8);
+            outbuf.push(c.y as u8);
+            outbuf.push(c.z as u8);
         }
     }
+
+    image::save_buffer(&Path::new("out/out.png"), &outbuf, NX as u32, NY as u32, image::RGB(8)).unwrap();
 }

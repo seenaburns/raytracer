@@ -90,7 +90,7 @@ mod tests {
         let expected = HitRecord {
           t: 1.0,
           p: Vec3::new(0.0, 0.0, 0.0),
-          normal: Vec3::new(0.0, 0.0, 1.0), 
+          normal: Vec3::new(0.0, 0.0, 1.0),
         };
         assert!(s.hit(&r, -100.0, 100.0) == Some(expected))
     }
