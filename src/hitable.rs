@@ -24,7 +24,7 @@ impl Sphere {
         HitRecord {
             t: t,
             p: surface_hit,
-            normal: (surface_hit - self.center).div_scalar(self.radius),
+            normal: (surface_hit - self.center) / self.radius,
         }
     }
 }

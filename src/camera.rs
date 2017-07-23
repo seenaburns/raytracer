@@ -13,8 +13,8 @@ impl Camera {
         Ray {
             origin: self.origin,
             dir: self.lower_left_corner
-                 + self.horizontal.mul_scalar(u)
-                 + self.vertical.mul_scalar(v)
+                 + (self.horizontal * u)
+                 + (self.vertical * v)
                  - self.origin,
         }
     }

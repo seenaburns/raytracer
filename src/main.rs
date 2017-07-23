@@ -21,7 +21,7 @@ const MAX_DISTANCE: f64 = 1000.0;
 fn random_in_unit_sphere() -> Vec3 {
     let mut rng = thread_rng();
     loop {
-        let p = Vec3::new(rng.next_f64(), rng.next_f64(), rng.next_f64()).mul_scalar(2.0).sub_scalar(1.0);
+        let p = Vec3::new(rng.next_f64(), rng.next_f64(), rng.next_f64()) * 2.0 - 1.0;
         if p.dot(p) <=  1.0 {
             return p
         }
@@ -33,13 +33,13 @@ fn color<T: Hitable>(r: &Ray, world: &HitableList<T>) -> Vec3 {
         Some(h) => {
             // Sphere color
             let target = h.p + h.normal + random_in_unit_sphere();
-            color(&Ray::new(h.p, target-h.p), world).mul_scalar(0.5)
+            color(&Ray::new(h.p, target-h.p), world) * 0.5
         }
         None => {
             // Background
             let unit_dir = r.dir.normalized();
             let t = 0.5 * (unit_dir.y + 1.0);
-            Vec3::new(1.0,1.0,1.0).mul_scalar(1.0-t) + Vec3::new(0.5, 0.7, 1.0).mul_scalar(t)
+            Vec3::new(1.0,1.0,1.0) * (1.0-t) + Vec3::new(0.5, 0.7, 1.0) * (t)
         }
     }
 }
@@ -80,12 +80,12 @@ fn main() {
                 // Get color
                 c += color(&r, &world);
             }
-            let c = c.div_scalar(NUM_SAMPLES as f64);
+            let c = c / (NUM_SAMPLES as f64);
 
             // Output for PPM
             // Gamma correct to 2: output color ^ (1/gamma) = x^(1/2) = sqrt
             let c = c.map(&|x: f64| x.sqrt());
-            let c = c.mul_scalar(255.99);
+            let c = c * 255.99;
             println!("{} {} {}", c.x as i32, c.y as i32, c.z as i32);
 
             // Save to buffer for image out

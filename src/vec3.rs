@@ -28,22 +28,6 @@ impl Vec3 {
         Vec3 { x: f(self.x), y: f(self.y), z: f(self.z), }
     }
 
-    pub fn add_scalar(self, other: f64) -> Vec3 {
-        self.map(&(|x: f64| x + other))
-    }
-
-    pub fn sub_scalar(self, other: f64) -> Vec3 {
-        self.map(&(|x: f64| x - other))
-    }
-
-    pub fn mul_scalar(self, other: f64) -> Vec3 {
-        self.map(&(|x: f64| x * other))
-    }
-
-    pub fn div_scalar(self, other: f64) -> Vec3 {
-        self.map(&(|x: f64| x / other))
-    }
-
     pub fn length(self) -> f64 {
         let len = self.squared_length();
         len.sqrt()
@@ -54,7 +38,7 @@ impl Vec3 {
     }
 
     pub fn normalized(self) -> Vec3 {
-        self.div_scalar(self.length())
+        self / self.length()
     }
 
     pub fn dot(self, other: Vec3) -> f64 {
@@ -70,6 +54,7 @@ impl Vec3 {
     }
 }
 
+// Vector operations
 impl Add for Vec3 {
     type Output = Vec3;
     fn add(self, other: Vec3) -> Vec3 {
@@ -111,28 +96,57 @@ impl Neg for Vec3 {
     }
 }
 
+// Scalar operations
+impl Add<f64> for Vec3 {
+    type Output = Vec3;
+    fn add(self, other: f64) -> Vec3 {
+        self.map(&(|x: f64| x + other))
+    }
+}
+
+impl Sub<f64> for Vec3 {
+    type Output = Vec3;
+    fn sub(self, other: f64) -> Vec3 {
+        self.map(&(|x: f64| x - other))
+    }
+}
+
+impl Mul<f64> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, other: f64) -> Vec3 {
+        self.map(&(|x: f64| x * other))
+    }
+}
+
+impl Div<f64> for Vec3 {
+    type Output = Vec3;
+    fn div(self, other: f64) -> Vec3 {
+        self.map(&(|x: f64| x / other))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_add_scalar() {
-        assert!(Vec3::new(1.0,2.0,3.0).add_scalar(2.0) == Vec3::new(3.0,4.0,5.0))
+        assert!(Vec3::new(1.0,2.0,3.0) + 2.0 == Vec3::new(3.0,4.0,5.0))
     }
 
     #[test]
     fn test_sub_scalar() {
-        assert!(Vec3::new(1.0,2.0,3.0).sub_scalar(2.0) == Vec3::new(-1.0,0.0,1.0))
+        assert!(Vec3::new(1.0,2.0,3.0) - 2.0 == Vec3::new(-1.0,0.0,1.0))
     }
 
     #[test]
     fn test_mul_scalar() {
-        assert!(Vec3::new(1.0,2.0,3.0).mul_scalar(2.0) == Vec3::new(2.0,4.0,6.0))
+        assert!(Vec3::new(1.0,2.0,3.0) * 2.0 == Vec3::new(2.0,4.0,6.0))
     }
 
     #[test]
     fn test_div_scalar() {
-        assert!(Vec3::new(1.0,2.0,3.0).div_scalar(2.0) == Vec3::new(0.5,1.0,1.5))
+        assert!(Vec3::new(1.0,2.0,3.0) / 2.0 == Vec3::new(0.5,1.0,1.5))
     }
 
     #[test]
@@ -149,7 +163,7 @@ mod tests {
     fn test_normalized() {
         let v = Vec3::new(1.0,2.0,3.0);
         let l = 14.0f64;
-        assert!(v.normalized() == v.div_scalar(l.sqrt()))
+        assert!(v.normalized() == v / l.sqrt())
     }
 
     #[test]
