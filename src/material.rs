@@ -9,7 +9,8 @@ pub struct Lambertian {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Metal {
-    pub albedo: Vec3
+    pub albedo: Vec3,
+    fuzz: f64,
 }
 
 // Allow hitable to reference a material
@@ -30,10 +31,11 @@ impl Material {
         }
     }
 
-    pub fn metal(albedo: Vec3) -> Material {
+    pub fn metal(albedo: Vec3, fuzz: f64) -> Material {
         Material::Metal { m:
             Metal {
-                albedo: albedo
+                albedo: albedo,
+                fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
             }
         }
     }
@@ -65,7 +67,7 @@ impl MaterialResponse for Metal {
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let v = r.dir.normalized();
         let reflected = reflect(v, hit.normal);
-        let scattered = Ray::new(hit.p, reflected);
+        let scattered = Ray::new(hit.p, reflected + random_in_unit_sphere() * self.fuzz);
         let attentuation = self.albedo;
         if scattered.dir.dot(hit.normal) > 0.0 {
             Some((attentuation, scattered))

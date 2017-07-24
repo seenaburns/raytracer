@@ -69,8 +69,8 @@ fn main() {
         items: vec![
             Sphere { center: Vec3::new(0.0,0.0,-1.0),     radius: 0.5,   material: Material::lambertian(Vec3::new(0.8,0.3,0.3))},
             Sphere { center: Vec3::new(0.0,-100.5,-1.0),  radius: 100.0, material: Material::lambertian(Vec3::new(0.8,0.8,0.0))}, // ground
-            Sphere { center: Vec3::new(1.0,0.0,-1.0),     radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.6,0.2))},
-            Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.8,0.8))},
+            Sphere { center: Vec3::new(1.0,0.0,-1.0),     radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.6,0.2), 1.0)},
+            Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.8,0.8), 0.3)},
         ]
     };
 
