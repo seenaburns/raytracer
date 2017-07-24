@@ -20,6 +20,25 @@ pub enum Material {
     Metal       { m: Metal },
 }
 
+impl Material {
+    // Convenience constructors
+    pub fn lambertian(albedo: Vec3) -> Material {
+        Material::Lambertian { m:
+            Lambertian {
+                albedo: albedo
+            }
+        }
+    }
+
+    pub fn metal(albedo: Vec3) -> Material {
+        Material::Metal { m:
+            Metal {
+                albedo: albedo
+            }
+        }
+    }
+}
+
 
 pub fn scatter(m: Material, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
     match m {
