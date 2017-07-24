@@ -1,4 +1,7 @@
+extern crate rand;
+
 use std::ops::*;
+use rand::{Rand, Rng, random};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
@@ -10,18 +13,6 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x: x, y: y, z: z, }
-    }
-
-    pub fn r(&self) -> &f64 {
-        &self.x
-    }
-
-    pub fn g(&self) -> &f64 {
-        &self.x
-    }
-
-    pub fn b(&self) -> &f64 {
-        &self.x
     }
 
     pub fn map(self, f: &Fn(f64) -> f64) -> Vec3 {
@@ -96,6 +87,12 @@ impl Neg for Vec3 {
     }
 }
 
+impl Rand for Vec3 {
+    fn rand<R: Rng>(rng: &mut R) -> Vec3 {
+        Vec3::new(rng.gen(), rng.gen(), rng.gen())
+    }
+}
+
 // Scalar operations
 impl Add<f64> for Vec3 {
     type Output = Vec3;
@@ -118,10 +115,32 @@ impl Mul<f64> for Vec3 {
     }
 }
 
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self, other: Vec3) -> Vec3 {
+        other * self
+    }
+}
+
 impl Div<f64> for Vec3 {
     type Output = Vec3;
     fn div(self, other: f64) -> Vec3 {
         self.map(&(|x: f64| x / other))
+    }
+}
+
+// Other
+// Reflect v over normal n
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2.0 * v.dot(n) * n
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = random::<Vec3>() * 2.0 - 1.0;
+        if p.dot(p) <=  1.0 {
+            return p
+        }
     }
 }
 
@@ -184,5 +203,12 @@ mod tests {
         let a = Vec3::new(1.0,2.0,3.0);
         let b = Vec3::new(4.0,5.0,6.0);
         assert!(a.cross(b) == Vec3::new(-3.0,6.0,-3.0))
+    }
+
+    #[test]
+    fn test_reflect() {
+        let v = Vec3::new(1.0,-1.0,0.0);
+        let n = Vec3::new(0.0,1.0,0.0);
+        assert!(reflect(v,n) == Vec3::new(1.0,1.0,0.0))
     }
 }

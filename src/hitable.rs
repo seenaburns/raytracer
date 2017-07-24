@@ -1,11 +1,13 @@
-use super::vec3::Vec3;
-use super::ray::Ray;
+use vec3::Vec3;
+use ray::Ray;
+use material::Material;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct HitRecord {
     pub t: f64,
     pub p: Vec3,
     pub normal: Vec3,
+    pub material: Material,
 }
 
 pub trait Hitable {
@@ -16,6 +18,7 @@ pub trait Hitable {
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
+    pub material: Material,
 }
 
 impl Sphere {
@@ -25,6 +28,7 @@ impl Sphere {
             t: t,
             p: surface_hit,
             normal: (surface_hit - self.center) / self.radius,
+            material: self.material,
         }
     }
 }

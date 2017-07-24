@@ -1,11 +1,17 @@
-extern crate raytracer;
 extern crate rand;
 extern crate image;
 
-use raytracer::vec3::Vec3;
-use raytracer::ray::Ray;
-use raytracer::hitable::*;
-use raytracer::camera::Camera;
+mod ray;
+mod vec3;
+mod hitable;
+mod camera;
+mod material;
+
+use vec3::{Vec3, random_in_unit_sphere};
+use ray::Ray;
+use hitable::*;
+use camera::Camera;
+use material::{Material, Lambertian, Metal};
 
 use rand::{thread_rng, Rng};
 
@@ -17,23 +23,22 @@ const NY: i32 = 100;
 const NUM_SAMPLES: i32 = 100;
 const MIN_DISTANCE: f64 = 0.000001;
 const MAX_DISTANCE: f64 = 1000.0;
+const DEPTH_MAX: i32 = 50;
 
-fn random_in_unit_sphere() -> Vec3 {
-    let mut rng = thread_rng();
-    loop {
-        let p = Vec3::new(rng.next_f64(), rng.next_f64(), rng.next_f64()) * 2.0 - 1.0;
-        if p.dot(p) <=  1.0 {
-            return p
-        }
-    }
-}
-
-fn color<T: Hitable>(r: &Ray, world: &HitableList<T>) -> Vec3 {
+fn color<T: Hitable>(r: &Ray, world: &HitableList<T>, depth: i32) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some(h) => {
-            // Sphere color
-            let target = h.p + h.normal + random_in_unit_sphere();
-            color(&Ray::new(h.p, target-h.p), world) * 0.5
+            if depth < 50 {
+                match material::scatter(h.material, r, &h) {
+                    Some((attentuation, scattered)) => {
+                        attentuation * color(&scattered, world, depth+1)
+                    }
+                    None => Vec3::new(0.0,0.0,0.0)
+                }
+            } else {
+                // Depth exceeded default color
+                Vec3::new(0.0,0.0,0.0)
+            }
         }
         None => {
             // Background
@@ -54,10 +59,11 @@ fn main() {
         origin: Vec3::new(0.0, 0.0, 0.0),
     };
 
+    let m: Material = Material::Lambertian { m: Lambertian { albedo: Vec3::new(0.5,0.5,0.5) } };
     let world: HitableList<Sphere> = HitableList {
         items: vec![
-            Sphere { center: Vec3::new(0.0,0.0,-1.0), radius: 0.5 },
-            Sphere { center: Vec3::new(0.0,-100.5,-1.0), radius: 100.0 },
+            Sphere { center: Vec3::new(0.0,0.0,-1.0),    radius: 0.5,   material: m},
+            Sphere { center: Vec3::new(0.0,-100.5,-1.0), radius: 100.0, material: m},
         ]
     };
 
@@ -69,7 +75,7 @@ fn main() {
         for i in 0..NX {
             let mut c = Vec3::new(0.0, 0.0, 0.0);
 
-            for s in 0..NUM_SAMPLES {
+            for _s in 0..NUM_SAMPLES {
                 // Get percent offset from bottom left corner
                 let u = (i as f64 + rng.next_f64()) / (NX as f64);
                 let v = (j as f64 + rng.next_f64()) / (NY as f64);
@@ -78,7 +84,7 @@ fn main() {
                 let r = camera.get_ray(u, v);
 
                 // Get color
-                c += color(&r, &world);
+                c += color(&r, &world, 0);
             }
             let c = c / (NUM_SAMPLES as f64);
 
