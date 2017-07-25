@@ -1,6 +1,7 @@
 use vec3::{Vec3, random_in_unit_sphere};
 use ray::Ray;
 use hitable::HitRecord;
+use rand::random;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Lambertian {
@@ -97,20 +98,32 @@ impl MaterialResponse for Dielectric {
         let reflected = reflect(r.dir, hit.normal);
         let attentuation = Vec3::new(1.0,1.0,1.0);
 
-        let (outward_normal, ni_over_nt) =
+        let (outward_normal, ni_over_nt, cosine) =
             if r.dir.dot(hit.normal) > 0.0 {
-                (-hit.normal, self.index)
+                let cosine = self.index * r.dir.dot(hit.normal) / r.dir.length();
+                (-hit.normal, self.index, cosine)
             } else {
-                (hit.normal, 1.0 / self.index)
+                let cosine = -r.dir.dot(hit.normal) / r.dir.length();
+                (hit.normal, 1.0 / self.index, cosine)
             };
 
-        match refract(r.dir, outward_normal, ni_over_nt) {
+        let out_ray = match refract(r.dir, outward_normal, ni_over_nt) {
             Some(refracted) => {
-                let scattered = Ray::new(hit.p, refracted);
-                Some((attentuation, scattered))
+                if random::<f64>() < schlick(cosine, self.index) {
+                    // Return REFLECT
+                    Ray::new(hit.p, reflected)
+                } else {
+                    // Return REFRACT
+                    Ray::new(hit.p, refracted)
+                }
             },
-            None => None
-        }
+            None => {
+                // No refracted ray, return REFLECT
+                Ray::new(hit.p, reflected)
+            }
+        };
+
+        Some((attentuation, out_ray))
     }
 }
 
@@ -130,4 +143,10 @@ pub fn refract(v: Vec3, n: Vec3, ni_over_nt: f64) -> Option<Vec3> {
     } else {
         None
     }
+}
+
+pub fn schlick(cosine: f64, index: f64) -> f64 {
+    let r0 = (1.0 - index) / (1.0 + index);
+    let r0 = r0 * r0;
+    r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
 }
