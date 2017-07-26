@@ -13,14 +13,14 @@ use hitable::*;
 use camera::Camera;
 use material::{Material, Lambertian, Metal};
 
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, Rng, random};
 
 use std::io::{self, Write};
 use std::path::Path;
 
-const NX: i32 = 200;
-const NY: i32 = 100;
-const NUM_SAMPLES: i32 = 100;
+const NX: i32 = 400;
+const NY: i32 = 200;
+const NUM_SAMPLES: i32 = 150;
 const MIN_DISTANCE: f64 = 0.000001;
 const MAX_DISTANCE: f64 = 1000.0;
 const DEPTH_MAX: i32 = 50;
@@ -54,35 +54,102 @@ fn color<T: Hitable>(r: &Ray, world: &HitableList<T>, depth: i32) -> Vec3 {
     }
 }
 
+fn random_scene() -> HitableList<Sphere> {
+    let mut items = Vec::new();
+
+    // Ground
+    items.push(Sphere {
+        center: Vec3::new(0.0,-1000.0,0.0),
+        radius: 1000.0,
+        material: Material::lambertian(Vec3::new(0.5,0.5,0.5)),
+    });
+
+    // Big spheres
+    items.push(Sphere {
+        center: Vec3::new(-4.0,1.0,0.0),
+        radius: 1.0,
+        material: Material::lambertian(random::<Vec3>() * random::<Vec3>()),
+    });
+    items.push(Sphere {
+        center: Vec3::new(4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Material::metal((random::<Vec3>() + 1.0 * 0.5), random::<f64>() * 0.5),
+    });
+    items.push(Sphere {
+        center: Vec3::new(0.0,1.0,0.0),
+        radius: 1.0,
+        material: Material::dielectric(1.5),
+    });
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random::<f64>();
+            let center = Vec3::new(
+                a as f64 + 0.9 * random::<f64>(),
+                0.2,
+                b as f64 + 0.9 * random::<f64>(),
+            );
+            if (center - Vec3::new(4.0,0.2,0.0)).length() > 0.9 {
+                let m: Material;
+                if choose_mat < 0.8 {
+                    // diffuse
+                    m = Material::lambertian(random::<Vec3>() * random::<Vec3>());
+                } else if choose_mat < 0.95 {
+                    // metal
+                    m = Material::metal(
+                        (random::<Vec3>() + 1.0) * 0.5,
+                        0.5 * random::<f64>(),
+                    );
+
+                } else {
+                    // glass
+                    m = Material::dielectric(1.5);
+
+                }
+                items.push(Sphere {
+                    center: center,
+                    radius: 0.2,
+                    material: m,
+                });
+            }
+        }
+    }
+
+    HitableList {
+        items: items
+    }
+}
+
 fn main() {
     io::stdout().write_fmt(format_args!("P3\n{} {}\n{}\n", NX, NY, 255)).unwrap();
 
-    let lookfrom = Vec3::new(3.0, 3.0, 2.0);
-    let lookat = Vec3::new(0.0, 0.0, -1.0);
+    let lookfrom = Vec3::new(16.0, 2.0, 4.0);
+    let lookat = Vec3::new(-3.0, 0.5, -1.0);
     let camera = Camera::new(
         lookfrom,
         lookat,
         Vec3::new(0.0, 1.0, 0.0),
-        25.0,
+        15.0,
         (NX as f64) / (NY as f64),
-        2.0,
+        0.1,
         (lookfrom - lookat).length(),
     );
 
-    let m: Material = Material::lambertian(Vec3::new(0.5,0.5,0.5));
-
-    let R = (::std::f64::consts::PI / 4.0).cos();
-    let world: HitableList<Sphere> = HitableList {
-        items: vec![
-            Sphere { center: Vec3::new(0.0,0.0,-1.0),     radius: 0.5,   material: Material::lambertian(Vec3::new(0.1,0.2,0.5))},
-            Sphere { center: Vec3::new(0.0,-100.5,-1.0),  radius: 100.0, material: Material::lambertian(Vec3::new(0.8,0.8,0.0))}, // ground
-            Sphere { center: Vec3::new(1.0,0.0,-1.0),     radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.6,0.2), 0.0)},
-            Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: 0.5,   material: Material::dielectric(1.5)},
-            Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: -0.45, material: Material::dielectric(1.5)},
-            // Sphere { center: Vec3::new(-R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(0.0, 0.0, 1.0))},
-            // Sphere { center: Vec3::new( R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(1.0, 0.0, 0.0))},
-        ]
-    };
+    // let m: Material = Material::lambertian(Vec3::new(0.5,0.5,0.5));
+    //
+    // let R = (::std::f64::consts::PI / 4.0).cos();
+    // let world: HitableList<Sphere> = HitableList {
+    //     items: vec![
+    //         Sphere { center: Vec3::new(0.0,0.0,-1.0),     radius: 0.5,   material: Material::lambertian(Vec3::new(0.1,0.2,0.5))},
+    //         Sphere { center: Vec3::new(0.0,-100.5,-1.0),  radius: 100.0, material: Material::lambertian(Vec3::new(0.8,0.8,0.0))}, // ground
+    //         Sphere { center: Vec3::new(1.0,0.0,-1.0),     radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.6,0.2), 0.0)},
+    //         Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: 0.5,   material: Material::dielectric(1.5)},
+    //         Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: -0.45, material: Material::dielectric(1.5)},
+    //         // Sphere { center: Vec3::new(-R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(0.0, 0.0, 1.0))},
+    //         // Sphere { center: Vec3::new( R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(1.0, 0.0, 0.0))},
+    //     ]
+    // };
+    let world = random_scene();
 
     let mut rng = thread_rng();
 
@@ -115,6 +182,11 @@ fn main() {
             outbuf.push(c.x as u8);
             outbuf.push(c.y as u8);
             outbuf.push(c.z as u8);
+        }
+
+        // Write percentage progress
+        if j % (NY / 10) == 0 {
+            writeln!(&mut std::io::stderr(), "{}/{}", NY-j, NY);
         }
     }
 
