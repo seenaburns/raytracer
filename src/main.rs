@@ -57,12 +57,16 @@ fn color<T: Hitable>(r: &Ray, world: &HitableList<T>, depth: i32) -> Vec3 {
 fn main() {
     io::stdout().write_fmt(format_args!("P3\n{} {}\n{}\n", NX, NY, 255)).unwrap();
 
+    let lookfrom = Vec3::new(3.0, 3.0, 2.0);
+    let lookat = Vec3::new(0.0, 0.0, -1.0);
     let camera = Camera::new(
-        Vec3::new(-2.0, 2.0, 1.0),
-        Vec3::new(0.0, 0.0, -1.0),
+        lookfrom,
+        lookat,
         Vec3::new(0.0, 1.0, 0.0),
         25.0,
-        (NX as f64) / (NY as f64)
+        (NX as f64) / (NY as f64),
+        2.0,
+        (lookfrom - lookat).length(),
     );
 
     let m: Material = Material::lambertian(Vec3::new(0.5,0.5,0.5));
