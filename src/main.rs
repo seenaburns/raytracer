@@ -20,7 +20,7 @@ use std::path::Path;
 
 const NX: i32 = 400;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 150;
+const NUM_SAMPLES: i32 = 300;
 const MIN_DISTANCE: f64 = 0.000001;
 const MAX_DISTANCE: f64 = 1000.0;
 const DEPTH_MAX: i32 = 50;
@@ -73,7 +73,7 @@ fn random_scene() -> HitableList<Sphere> {
     items.push(Sphere {
         center: Vec3::new(4.0, 1.0, 0.0),
         radius: 1.0,
-        material: Material::metal((random::<Vec3>() + 1.0 * 0.5), random::<f64>() * 0.5),
+        material: Material::metal((random::<Vec3>() + 1.0) * 0.5, random::<f64>() * 0.3),
     });
     items.push(Sphere {
         center: Vec3::new(0.0,1.0,0.0),
