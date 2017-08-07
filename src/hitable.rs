@@ -86,6 +86,7 @@ mod tests {
         let s = Sphere {
           center: Vec3::new(0.0, 0.0, -1.0),
           radius: 1.0,
+          material: Material::lambertian(Vec3::new(1.0, 0.0, 0.0))
         };
         let r = Ray {
           origin: Vec3::new(0.0, 0.0, 1.0),
@@ -95,6 +96,7 @@ mod tests {
           t: 1.0,
           p: Vec3::new(0.0, 0.0, 0.0),
           normal: Vec3::new(0.0, 0.0, 1.0),
+          material: Material::lambertian(Vec3::new(1.0, 0.0, 0.0))
         };
         assert!(s.hit(&r, -100.0, 100.0) == Some(expected))
     }

@@ -209,11 +209,4 @@ mod tests {
         let b = Vec3::new(4.0,5.0,6.0);
         assert!(a.cross(b) == Vec3::new(-3.0,6.0,-3.0))
     }
-
-    #[test]
-    fn test_reflect() {
-        let v = Vec3::new(1.0,-1.0,0.0);
-        let n = Vec3::new(0.0,1.0,0.0);
-        assert!(reflect(v,n) == Vec3::new(1.0,1.0,0.0))
-    }
 }

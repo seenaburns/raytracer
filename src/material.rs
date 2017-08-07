@@ -150,3 +150,16 @@ pub fn schlick(cosine: f64, index: f64) -> f64 {
     let r0 = r0 * r0;
     r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ::vec3::Vec3;
+
+    #[test]
+    fn test_reflect() {
+        let v = Vec3::new(1.0,-1.0,0.0);
+        let n = Vec3::new(0.0,1.0,0.0);
+        assert!(reflect(v,n) == Vec3::new(1.0,1.0,0.0))
+    }
+}
