@@ -14,7 +14,7 @@ pub fn bench_rays_per_sec<F>(n: i32) {
         });
         let rays = bench_params.0 * bench_params.1 * bench_params.2;
         let rays_per_sec = rays as f64 / runtime;
-        println!("{} rays in {} sec, {:.2} rays/sec", 200 * 100 * 10, runtime, rays_per_sec);
+        println!("{} rays in {} sec, {:.2} rays/sec", rays, runtime, rays_per_sec);
         runs.push(rays_per_sec);
     }
     println!("Avg: {:.2} rays/sec from {} runs", runs.iter().sum::<f64>() / (runs.len() as f64), runs.len());
