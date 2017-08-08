@@ -1,5 +1,6 @@
 extern crate rand;
 extern crate image;
+extern crate time;
 
 mod ray;
 mod vec3;
@@ -56,17 +57,4 @@ fn main() {
     // let outbuf = render::render(&world, &camera, NX, NY, NUM_SAMPLES);
     // let outbuf_u8: Vec<u8> = outbuf.iter().map(|&x| { x as u8 }).collect();
     // image::save_buffer(&Path::new("out/out.png"), &outbuf_u8, NX as u32, NY as u32, image::RGB(8)).unwrap();
-
-    let mut runs: Vec<f64> = Vec::new();
-    for _ in 0..10 {
-        let bench_params = (100, 50, 5);
-        let runtime = bench::run_bench(|| {
-            bench::bench_scene(bench_params.0, bench_params.1, bench_params.2)
-        });
-        let rays = bench_params.0 * bench_params.1 * bench_params.2;
-        let rays_per_sec = rays as f64 / runtime;
-        println!("{} rays in {} sec, {:.2} rays/sec", 200 * 100 * 10, runtime, rays_per_sec);
-        runs.push(rays_per_sec);
-    }
-    println!("Avg: {:.2} rays/sec from {} runs", runs.iter().sum::<f64>() / (runs.len() as f64), runs.len());
 }
