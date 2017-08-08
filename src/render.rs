@@ -69,9 +69,9 @@ pub fn render<T: Hitable>(
         }
 
         // Write percentage progress
-        // if j % (ny / 10) == 0 {
-        //     writeln!(&mut ::std::io::stderr(), "{}/{}", ny-j, ny);
-        // }
+        if j % (ny / 10) == 0 {
+            writeln!(&mut ::std::io::stderr(), "{}/{}", ny-j, ny);
+        }
     }
 
     outbuf
