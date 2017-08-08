@@ -50,8 +50,16 @@ fn main() {
     //     ]
     // };
     let world = render::random_scene();
-    let outbuf = render::render(&world, &camera, NX, NY, NUM_SAMPLES);
+
+    let (outbuf, runtime) = bench::time(|| {
+        render::render(&world, &camera, NX, NY, NUM_SAMPLES)
+    });
+
     save_file(&outbuf, NX, NY, "out/out.ppm", Filetype::PPM);
+
+    // Summary stats
+    let rays = NX * NY * NUM_SAMPLES;
+    writeln!(&mut ::std::io::stderr(), "{} rays in {} seconds, {} rays/sec", rays, runtime, rays as f64/runtime);
 }
 
 // Supported output filetypes
