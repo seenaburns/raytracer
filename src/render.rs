@@ -60,7 +60,6 @@ pub fn render<T: Hitable>(
             // Gamma correct to 2: output color ^ (1/gamma) = x^(1/2) = sqrt
             let c = c.map(&|x: f64| x.sqrt());
             let c = c * 255.99;
-            // println!("{} {} {}", c.x as i32, c.y as i32, c.z as i32);
 
             // Save to buffer for image out
             outbuf.push(c.x as i32);
@@ -70,7 +69,7 @@ pub fn render<T: Hitable>(
 
         // Write percentage progress
         if j % (ny / 10) == 0 {
-            writeln!(&mut ::std::io::stderr(), "{}/{}", ny-j, ny);
+            writeln!(&mut ::std::io::stderr(), "{}/{}", ny-j, ny).unwrap();
         }
     }
 

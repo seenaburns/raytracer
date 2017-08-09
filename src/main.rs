@@ -59,7 +59,7 @@ fn main() {
 
     // Summary stats
     let rays = NX * NY * NUM_SAMPLES;
-    writeln!(&mut ::std::io::stderr(), "{} rays in {} seconds, {} rays/sec", rays, runtime, rays as f64/runtime);
+    writeln!(&mut ::std::io::stderr(), "{} rays in {} seconds, {} rays/sec", rays, runtime, rays as f64/runtime).unwrap();
 }
 
 // Supported output filetypes
@@ -68,12 +68,12 @@ enum Filetype {
     PNG
 }
 
-fn save_file(data: &Vec<i32>, nx: i32, ny: i32, outputPath: &str, filetype: Filetype) {
+fn save_file(data: &Vec<i32>, nx: i32, ny: i32, output_path: &str, filetype: Filetype) {
     match filetype {
         Filetype::PPM => {
             // Can save with image, but makes binary
             // Keeping manual implementation for debugging
-            let mut path = Path::new(outputPath);
+            let path = Path::new(output_path);
             let mut file = File::create(&path).unwrap();
 
             // Metadata
@@ -85,13 +85,13 @@ fn save_file(data: &Vec<i32>, nx: i32, ny: i32, outputPath: &str, filetype: File
                 file.write_fmt(format_args!("{} ", x)).unwrap();
                 i += 1;
                 if i % 3 == 0 {
-                    file.write(b"\n");
+                    file.write(b"\n").unwrap();
                 }
             }
         }
         Filetype::PNG => {
             let outbuf_u8: Vec<u8> = data.iter().map(|&x| { x as u8 }).collect();
-            image::save_buffer(&Path::new(outputPath), &outbuf_u8, nx as u32, ny as u32, image::RGB(8)).unwrap();
+            image::save_buffer(&Path::new(output_path), &outbuf_u8, nx as u32, ny as u32, image::RGB(8)).unwrap();
         }
     }
 }

@@ -1,4 +1,5 @@
-use time::{Duration, PreciseTime};
+#![allow(dead_code)]
+use time::PreciseTime;
 
 use vec3::Vec3;
 use camera::Camera;

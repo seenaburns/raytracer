@@ -1,8 +1,6 @@
 use vec3::{Vec3, random_in_unit_disk};
 use ray::Ray;
 
-const ASPECT_16_BY_9: f64 = 16.0/9.0;
-
 pub struct Camera {
     lower_left_corner: Vec3,
     horizontal: Vec3,
