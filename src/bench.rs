@@ -5,7 +5,7 @@ use camera::Camera;
 
 // Benchmarks sample scene
 // Prints iteration execution time and average
-pub fn bench_rays_per_sec<F>(n: i32) {
+pub fn bench_rays_per_sec(n: i32) {
     let mut runs: Vec<f64> = Vec::new();
     for _ in 0..n {
         let bench_params = (100, 50, 5);
