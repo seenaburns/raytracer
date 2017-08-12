@@ -19,6 +19,14 @@ impl Vec3 {
         Vec3 { x: f(self.x), y: f(self.y), z: f(self.z), }
     }
 
+    pub fn map2(a: Vec3, b: Vec3, f: &Fn(f64, f64) -> f64) -> Vec3 {
+        Vec3 {
+            x: f(a.x, b.x),
+            y: f(a.y, b.y),
+            z: f(a.z, b.z),
+        }
+    }
+
     pub fn length(self) -> f64 {
         let len = self.squared_length();
         len.sqrt()
