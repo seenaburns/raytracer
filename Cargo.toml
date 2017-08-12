@@ -7,3 +7,6 @@ authors = ["Seena Burns <hello@seenaburns.com>"]
 rand = "0.3"
 image = "*"
 time = "*"
+
+[profile.release]
+debug = true
