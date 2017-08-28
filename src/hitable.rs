@@ -14,29 +14,13 @@ pub struct HitRecord {
     pub material: Material,
 }
 
-// Method to enable cloning Box<Hitable> via
-// https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-trait-object
-trait HitableClone {
-    fn clone_box(&self) -> Box<Hitable>;
-}
-impl<T> HitableClone for T where T: 'static + Hitable + Clone {
-    fn clone_box(&self) -> Box<Hitable> {
-        Box::new(self.clone())
-    }
-}
-impl Clone for Box<Hitable> {
-    fn clone(&self) -> Box<Hitable> {
-        self.clone_box()
-    }
-}
-
 // Hitable trait includes
 // 1. function to check if a ray hits the object
 // 2. defining a bounding box for the object
 // Though conceptually separate all primitive objects currently define both. Once a hitable without
 // a bounding box (e.g. infinite floor) is needed, this can be separated into two traits and use a
 // combination as the trait object.
-pub trait Hitable: HitableClone {
+pub trait Hitable {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 
     fn bounding_box(&self) -> AABB;
@@ -99,7 +83,6 @@ impl Hitable for Sphere {
     }
 }
 
-#[derive(Clone)]
 pub struct HitableList {
     pub items: Vec<Box<Hitable>>
 }

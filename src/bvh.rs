@@ -51,7 +51,6 @@ impl AABB {
     }
 }
 
-#[derive(Clone)]
 pub struct Node {
     pub left: Option<Box<Hitable>>,
     pub right: Option<Box<Hitable>>,
@@ -106,8 +105,8 @@ impl Hitable for Node {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         if self.bounding_box.hit(r, t_min, t_max) {
             // If left/right exist, attempt to hit them
-            let lhit = self.left.clone().and_then(|h| h.hit(r, t_min, t_max));
-            let rhit = self.right.clone().and_then(|h| h.hit(r, t_min, t_max));
+            let lhit = self.left.as_ref().and_then(|h| h.hit(r, t_min, t_max));
+            let rhit = self.right.as_ref().and_then(|h| h.hit(r, t_min, t_max));
 
             match (lhit, rhit) {
                 (Some(lhitrec), Some(rhitrec)) => {
