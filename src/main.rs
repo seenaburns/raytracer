@@ -8,6 +8,8 @@ mod hitable;
 mod camera;
 mod material;
 mod render;
+mod bvh;
+mod util;
 
 mod bench;
 
@@ -18,9 +20,9 @@ use std::io::Write;
 use std::fs::File;
 use std::path::Path;
 
-const NX: i32 = 400;
-const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 5;
+const NX: i32 = 200;
+const NY: i32 = 100;
+const NUM_SAMPLES: i32 = 10;
 
 fn main() {
     let lookfrom = Vec3::new(16.0, 2.0, 4.0);

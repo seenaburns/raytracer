@@ -2,6 +2,7 @@ extern crate rand;
 
 use std::ops::*;
 use rand::{Rand, Rng, random};
+use util::Axis;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
@@ -13,6 +14,14 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x: x, y: y, z: z, }
+    }
+
+    pub fn get_axis(&self, a: &Axis) -> f64 {
+        match a {
+            &Axis::X => self.x,
+            &Axis::Y => self.y,
+            &Axis::Z => self.z,
+        }
     }
 
     pub fn map(self, f: &Fn(f64) -> f64) -> Vec3 {

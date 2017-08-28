@@ -1,6 +1,10 @@
 use vec3::Vec3;
 use ray::Ray;
 use material::Material;
+use bvh::AABB;
+use util::Axis;
+
+use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct HitRecord {
@@ -10,11 +14,43 @@ pub struct HitRecord {
     pub material: Material,
 }
 
-pub trait Hitable {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+// Method to enable cloning Box<Hitable> via
+// https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-trait-object
+trait HitableClone {
+    fn clone_box(&self) -> Box<Hitable>;
+}
+impl<T> HitableClone for T where T: 'static + Hitable + Clone {
+    fn clone_box(&self) -> Box<Hitable> {
+        Box::new(self.clone())
+    }
+}
+impl Clone for Box<Hitable> {
+    fn clone(&self) -> Box<Hitable> {
+        self.clone_box()
+    }
 }
 
-#[derive(Debug)]
+// Hitable trait includes
+// 1. function to check if a ray hits the object
+// 2. defining a bounding box for the object
+// Though conceptually separate all primitive objects currently define both. Once a hitable without
+// a bounding box (e.g. infinite floor) is needed, this can be separated into two traits and use a
+// combination as the trait object.
+pub trait Hitable: HitableClone {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+
+    fn bounding_box(&self) -> AABB;
+    fn compare_by_axis(&self, other: &Hitable, axis: &Axis) -> Ordering {
+        if self.bounding_box().min.get_axis(axis) - other.bounding_box().min.get_axis(axis) < 0.0 {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }
+}
+
+
+#[derive(Debug, Clone)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
@@ -54,13 +90,21 @@ impl Hitable for Sphere {
         }
         None
     }
+
+    fn bounding_box(&self) -> AABB {
+        AABB {
+            min: self.center - self.radius,
+            max: self.center + self.radius,
+        }
+    }
 }
 
-pub struct HitableList<T: Hitable> {
-    pub items: Vec<T>
+#[derive(Clone)]
+pub struct HitableList {
+    pub items: Vec<Box<Hitable>>
 }
 
-impl<T: Hitable> Hitable for HitableList<T> {
+impl Hitable for HitableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut hit: Option<HitRecord> = None;
         let mut closest = t_max;
@@ -74,6 +118,10 @@ impl<T: Hitable> Hitable for HitableList<T> {
             }
         }
         hit
+    }
+
+    fn bounding_box(&self) -> AABB {
+        self.items[0].bounding_box()
     }
 }
 

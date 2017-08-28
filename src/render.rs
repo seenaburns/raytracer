@@ -30,8 +30,8 @@ const COLOR_DEFAULT: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 // * `nx` - width of image
 // * `ny` - height of image
 // * `spp` - samples per pixel
-pub fn render<T: Hitable>(
-    scene: &HitableList<T>,
+pub fn render (
+    scene: &::bvh::Node,
     camera: &Camera,
     nx: i32,
     ny: i32,
@@ -76,7 +76,7 @@ pub fn render<T: Hitable>(
     outbuf
 }
 
-fn color<T: Hitable>(r: &Ray, world: &HitableList<T>, depth: i32) -> Vec3 {
+fn color(r: &Ray, world: &::bvh::Node, depth: i32) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some(h) => {
             if depth < DEPTH_MAX {
@@ -101,7 +101,7 @@ fn color<T: Hitable>(r: &Ray, world: &HitableList<T>, depth: i32) -> Vec3 {
     }
 }
 
-pub fn random_scene() -> HitableList<Sphere> {
+pub fn random_scene() -> ::bvh::Node {
     let mut items = Vec::new();
 
     // Ground
@@ -162,7 +162,8 @@ pub fn random_scene() -> HitableList<Sphere> {
         }
     }
 
-    HitableList {
-        items: items
-    }
+    let h = HitableList {
+        items: items.into_iter().map(|x| Box::new(x) as Box<Hitable>).collect()
+    };
+    ::bvh::Node::new(h)
 }
