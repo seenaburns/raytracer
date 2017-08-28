@@ -49,6 +49,6 @@ fn bench_scene(nx: i32, ny: i32, spp: i32) {
 
     let scene = ::render::random_scene();
 
-    ::render::render(&scene, &camera, nx, ny, spp);
+    ::render::render(&scene, &camera, nx, ny, spp, false);
 }
 

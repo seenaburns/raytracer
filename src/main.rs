@@ -51,17 +51,25 @@ fn main() {
     //         // Sphere { center: Vec3::new( R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(1.0, 0.0, 0.0))},
     //     ]
     // };
-    let world = render::random_scene();
 
-    let (outbuf, runtime) = bench::time(|| {
-        render::render(&world, &camera, NX, NY, NUM_SAMPLES)
-    });
+    match std::env::args().nth(1) {
+        Some(ref mode) if mode == "bench" => {
+            bench::bench_rays_per_sec(10)
+        }
+        _ => {
+            let world = render::random_scene();
 
-    save_file(&outbuf, NX, NY, "out/out.ppm", Filetype::PPM);
+            let (outbuf, runtime) = bench::time(|| {
+                render::render(&world, &camera, NX, NY, NUM_SAMPLES, false)
+            });
 
-    // Summary stats
-    let rays = NX * NY * NUM_SAMPLES;
-    writeln!(&mut ::std::io::stderr(), "{} rays in {} seconds, {} rays/sec", rays, runtime, rays as f64/runtime).unwrap();
+            save_file(&outbuf, NX, NY, "out/out.ppm", Filetype::PPM);
+
+            // Summary stats
+            let rays = NX * NY * NUM_SAMPLES;
+            writeln!(&mut ::std::io::stderr(), "{} rays in {} seconds, {} rays/sec", rays, runtime, rays as f64/runtime).unwrap();
+        }
+    }
 }
 
 // Supported output filetypes

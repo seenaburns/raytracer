@@ -35,7 +35,8 @@ pub fn render (
     camera: &Camera,
     nx: i32,
     ny: i32,
-    spp: i32
+    spp: i32,
+    debug: bool,
 ) -> Vec<i32>  {
     let mut outbuf: Vec<i32> = Vec::with_capacity((nx*ny*3) as usize);
 
@@ -68,7 +69,7 @@ pub fn render (
         }
 
         // Write percentage progress
-        if j % (ny / 10) == 0 {
+        if debug && j % (ny / 10) == 0 {
             writeln!(&mut ::std::io::stderr(), "{}/{}", ny-j, ny).unwrap();
         }
     }
