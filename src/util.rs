@@ -1,5 +1,6 @@
 use std::slice::Iter;
 
+#[derive(Debug)]
 pub enum Axis {
     X,
     Y,

@@ -1,12 +1,14 @@
 use vec3::Vec3;
 use ray::Ray;
-use hitable::{Hitable, HitRecord, HitableList};
+use hitable::*;
 use rand::random;
 use util::Axis;
 
 use std::iter::FromIterator;
 
+//
 // Axis aligned bounding box
+//
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AABB {
     pub min: Vec3,
@@ -18,7 +20,6 @@ impl AABB {
         // For each component find intersection with bounding box planes
         // For a given plane, e.g. x = x0, the ray p(t) = A + tB
         // intersects at (x0 - A)/B
-
         let mut result_min = tmin;
         let mut result_max = tmax;
         for a in Axis::iterator() {
@@ -30,11 +31,11 @@ impl AABB {
             let (t0, t1) = if inv_d < 0.0 { (t1, t0) } else { (t0, t1) };
 
             // Check each component to see if have a more limited region than what's been found
-            result_min = if t0 > tmin { t0 } else { tmin };
-            result_max = if t1 < tmax { t1 } else { tmax };
+            result_min = if t0 > result_min { t0 } else { result_min };
+            result_max = if t1 < result_max { t1 } else { result_max };
 
             // Ray components intersect at different areas, miss
-            if result_max < result_min {
+            if result_max <= result_min {
                 return false;
             }
         }
@@ -49,8 +50,18 @@ impl AABB {
             max: Vec3::map2(a.max, b.max, &|x,y| x.max(y)),
         }
     }
+
+    pub fn unit_aabb() -> AABB {
+        AABB {
+            min: Vec3::new(-1.0,-1.0,-1.0),
+            max: Vec3::new( 1.0, 1.0, 1.0),
+        }
+    }
 }
 
+//
+// BVH Tree Data Structure
+//
 pub struct Node {
     pub left: Option<Box<Hitable>>,
     pub right: Option<Box<Hitable>>,
@@ -131,7 +142,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_impl() {
+    fn unit_aabb_hit() {
+        let r = Ray {
+            origin: Vec3::new(0.0,0.0,-2.0),
+            dir: Vec3::new(0.0,0.0,2.0),
+        };
+        let res = AABB::unit_aabb().hit(&r, 0.0001, 1000.0);
+        assert!(res);
+    }
+
+    #[test]
+    fn unit_aabb_miss() {
+        let r = Ray {
+            origin: Vec3::new(0.0,0.0,-2.0),
+            dir: Vec3::new(0.0,2.0,2.0),
+        };
+        let res = AABB::unit_aabb().hit(&r, 0.0001, 1000.0);
+        assert!(!res);
+    }
+
+    #[test]
+    fn surrounding_box() {
         let min1 = Vec3::new(1.0,2.0,3.0);
         let max1 = Vec3::new(3.0,5.0,7.0);
         let min2 = Vec3::new(-1.0,4.0,1.0);
@@ -144,6 +175,45 @@ mod tests {
             max: Vec3::new(3.0,8.0,7.0),
         };
         assert!(res == expected)
+    }
+}
+
+#[cfg(test)]
+mod bvh_tests {
+    use super::*;
+
+    #[test]
+    fn unit_bvh() {
+        let unit_bvh = Node::new(HitableList {
+            items: vec![Box::new(Sphere::unit_sphere())]
+        });
+        assert!(unit_bvh.bounding_box == AABB::unit_aabb());
+    }
+
+    #[test]
+    fn bvh_hit() {
+        let unit_bvh = Node::new(HitableList {
+            items: vec![Box::new(Sphere::unit_sphere())]
+        });
+        let r = Ray {
+            origin: Vec3::new(0.0,0.0,-2.0),
+            dir: Vec3::new(0.0,0.0,2.0),
+        };
+        let res = unit_bvh.hit(&r, 0.0001, 1000.0);
+        assert!(res.is_some());
+    }
+
+    #[test]
+    fn bvh_miss() {
+        let unit_bvh = Node::new(HitableList {
+            items: vec![Box::new(Sphere::unit_sphere())]
+        });
+        let r = Ray {
+            origin: Vec3::new(0.0,0.0,-2.0),
+            dir: Vec3::new(0.0,2.0,2.0),
+        };
+        let res = unit_bvh.hit(&r, 0.0001, 1000.0);
+        assert!(res.is_none());
     }
 }
 

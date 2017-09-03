@@ -51,4 +51,3 @@ fn bench_scene(nx: i32, ny: i32, spp: i32) {
 
     ::render::render(&scene, &camera, nx, ny, spp, false);
 }
-

@@ -51,6 +51,14 @@ impl Sphere {
             material: self.material,
         }
     }
+
+    pub fn unit_sphere() -> Sphere {
+        Sphere {
+            center: Vec3::new(0.0,0.0,0.0),
+            radius: 1.0,
+            material: Material::lambertian(Vec3::new(0.5,0.5,0.5)),
+        }
+    }
 }
 
 impl Hitable for Sphere {

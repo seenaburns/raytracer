@@ -1,20 +1,10 @@
-extern crate rand;
 extern crate image;
-extern crate time;
+extern crate raytracer;
 
-mod ray;
-mod vec3;
-mod hitable;
-mod camera;
-mod material;
-mod render;
-mod bvh;
-mod util;
-
-mod bench;
-
-use vec3::{Vec3};
-use camera::Camera;
+use raytracer::vec3::{Vec3};
+use raytracer::camera::Camera;
+use raytracer::bench;
+use raytracer::render;
 
 use std::io::Write;
 use std::fs::File;
