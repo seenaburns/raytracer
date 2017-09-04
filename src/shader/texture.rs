@@ -1,5 +1,9 @@
-use std::fmt::Debug;
+extern crate rand;
+
 use vec3::Vec3;
+
+use std::fmt::Debug;
+use rand::distributions::{IndependentSample, Range};
 
 //
 // Texture Definition
@@ -49,6 +53,73 @@ impl<T1, T2> Texture for CheckerTexture<T1, T2>
     }
 }
 
+//
+// Perlin Texture
+//
+#[derive(Debug, Clone)]
+pub struct PerlinNoise {
+    pub rand_float: Vec<f64>,
+    pub perm_x: Vec<i32>,
+    pub perm_y: Vec<i32>,
+    pub perm_z: Vec<i32>,
+}
+
+impl PerlinNoise {
+    pub fn new() -> PerlinNoise {
+        PerlinNoise {
+            rand_float: PerlinNoise::generate_rand_float(),
+            perm_x: PerlinNoise::generate_perm(),
+            perm_y: PerlinNoise::generate_perm(),
+            perm_z: PerlinNoise::generate_perm(),
+        }
+    }
+
+    fn noise(&self, p: &Vec3) -> f64 {
+        let uvw = p.map(&|x| x - x.floor());
+        let i = ((p.x * 4.0) as i32 & 255) as usize;
+        let j = ((p.y * 4.0) as i32 & 255) as usize;
+        let k = ((p.z * 4.0) as i32 & 255) as usize;
+        let index = (self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k]) as usize;
+        self.rand_float[index]
+    }
+
+    fn generate_rand_float() -> Vec<f64> {
+        let mut v = Vec::with_capacity(256);
+        let range = Range::new(0.0,1.0);
+        let mut rng = rand::thread_rng();
+        for _ in 0..256 {
+            v.push(range.ind_sample(&mut rng));
+        }
+        v
+    }
+
+    fn permute(p: &mut Vec<i32>) {
+        let mut rng = rand::thread_rng();
+        for i in (0..p.len()).rev() {
+            let range = Range::new(0,i+1);
+            let target = range.ind_sample(&mut rng);
+            let tmp = p[i];
+            p[i] = p[target];
+            p[target] = tmp;
+        }
+    }
+
+    fn generate_perm() -> Vec<i32> {
+        let mut p = Vec::with_capacity(256);
+        for i in 0..256 {
+            p.push(i as i32);
+        }
+        PerlinNoise::permute(&mut p);
+        p
+    }
+}
+
+impl Texture for PerlinNoise {
+    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+        Vec3::new(1.0,1.0,1.0) * self.noise(p)
+    }
+}
+
 // Constructors
 pub fn constant_texture(c: Vec3) -> ConstantTexture {
     ConstantTexture { color: c }
@@ -63,4 +134,8 @@ pub fn checker_texture<T1, T2>(t1: T1, t2: T2, scale: f64) -> CheckerTexture<T1,
         even: t2,
         scale: scale,
     }
+}
+
+pub fn perlin_noise_texture() -> PerlinNoise {
+    PerlinNoise::new()
 }

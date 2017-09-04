@@ -1,9 +1,12 @@
 extern crate image;
 extern crate raytracer;
 
+use raytracer::*;
 use raytracer::vec3::{Vec3};
 use raytracer::camera::Camera;
-use raytracer::*;
+use raytracer::model::{hitable, Renderable, Model};
+use raytracer::shader::texture;
+use raytracer::shader::material::Material;
 
 use std::io::Write;
 use std::fs::File;
@@ -11,21 +14,9 @@ use std::path::Path;
 
 const NX: i32 = 400;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 10;
+const NUM_SAMPLES: i32 = 5;
 
 fn main() {
-    let lookfrom = Vec3::new(16.0, 2.0, 4.0);
-    let lookat = Vec3::new(-3.0, 0.5, -1.0);
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        Vec3::new(0.0, 1.0, 0.0),
-        15.0,
-        (NX as f64) / (NY as f64),
-        0.1,
-        (lookfrom - lookat).length(),
-    );
-
     // let m: Material = Material::lambertian(Vec3::new(0.5,0.5,0.5));
     //
     // let R = (::std::f64::consts::PI / 4.0).cos();
@@ -43,19 +34,53 @@ fn main() {
 
     // Two Checker spheres
     // let checker = texture::checker_texture(
-    //     Box::new(texture::constant_texture(Vec3::new(0.2,0.3,0.1))),
-    //     Box::new(texture::constant_texture(Vec3::new(0.9,0.9,0.9))),
+    //     texture::constant_texture(Vec3::new(0.2,0.3,0.1)),
+    //     texture::constant_texture(Vec3::new(0.9,0.9,0.9)),
     //     10.0,
     // );
-    // let world = hitable::HitableList {
-    //     items: vec![
-    //         Box::new(hitable::Sphere { center: Vec3::new(0.0,-10.0,0.0), radius: 10.0, material: material::Material::lambertian(texture::TextureEnum::CheckerTexture(checker.clone())) }),
-    //         Box::new(hitable::Sphere { center: Vec3::new(0.0, 10.0,0.0), radius: 10.0, material: material::Material::lambertian(texture::TextureEnum::CheckerTexture(checker.clone())) }),
-    //     ]
-    // };
+    let perlin = texture::perlin_noise_texture();
+    let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
+        Box::new(Model::new(
+            hitable::Sphere {
+                center: Vec3::new(0.0,-1000.0,0.0),
+                radius: 1000.0,
+            },
+            Material::lambertian(perlin.clone()),
+        )),
+        Box::new(Model::new(
+            hitable::Sphere {
+                center: Vec3::new(0.0,2.0,0.0),
+                radius: 2.0,
+            },
+            Material::lambertian(perlin.clone()),
+        )),
+    ]);
+    let lookfrom = Vec3::new(13.0,2.0,3.0);
+    let lookat = Vec3::new(0.0,0.0,0.0);
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        (NX as f64) / (NY as f64),
+        0.0,
+        (lookfrom - lookat).length(),
+    );
 
     // Random world
-    let world = render::random_scene();
+    // let world = render::random_scene();
+    // let lookfrom = Vec3::new(16.0, 2.0, 4.0);
+    // let lookat = Vec3::new(-3.0, 0.5, -1.0);
+    // let camera = Camera::new(
+    //     lookfrom,
+    //     lookat,
+    //     Vec3::new(0.0, 1.0, 0.0),
+    //     15.0,
+    //     (NX as f64) / (NY as f64),
+    //     0.1,
+    //     (lookfrom - lookat).length(),
+    // );
+
 
     match std::env::args().nth(1) {
         Some(ref mode) if mode == "bench" => {
