@@ -1,7 +1,7 @@
 use vec3::{Vec3, random_in_unit_sphere};
 use ray::Ray;
-use hitable::HitRecord;
-use texture::*;
+use model::hitable::HitRecord;
+use shader::texture::*;
 use rand::random;
 
 #[derive(Debug, Clone)]
@@ -64,9 +64,9 @@ impl Material {
 
 pub fn scatter(m: &Material, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
     match m {
-        &Material::Lambertian { m: ref m } => m.scatter(r, hit),
-        &Material::Metal { m: ref m }      => m.scatter(r, hit),
-        &Material::Dielectric { m: ref m } => m.scatter(r, hit),
+        &Material::Lambertian { ref m } => m.scatter(r, hit),
+        &Material::Metal { ref m }      => m.scatter(r, hit),
+        &Material::Dielectric { ref m } => m.scatter(r, hit),
     }
 }
 

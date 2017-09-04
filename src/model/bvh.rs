@@ -1,10 +1,27 @@
-use vec3::Vec3;
-use ray::Ray;
-use hitable::*;
+use model::Renderable;
+use model::hitable::*;
+use model::Model;
 use rand::random;
+use ray::Ray;
+use shader::material::Material;
 use util::Axis;
+use vec3::Vec3;
+
+use std::cmp::Ordering;
 
 use std::iter::FromIterator;
+
+pub trait BoundingBox {
+    fn bounding_box(&self) -> AABB;
+
+    fn compare_by_axis(&self, other: &BoundingBox, axis: &Axis) -> Ordering {
+        if self.bounding_box().min.get_axis(axis) - other.bounding_box().min.get_axis(axis) < 0.0 {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }
+}
 
 //
 // Axis aligned bounding box
@@ -16,6 +33,7 @@ pub struct AABB {
 }
 
 impl AABB {
+    // True if ray intersects AABB at some point between tmin and tmax
     pub fn hit(&self, r: &Ray, tmin: f64, tmax: f64) -> bool {
         // For each component find intersection with bounding box planes
         // For a given plane, e.g. x = x0, the ray p(t) = A + tB
@@ -62,20 +80,29 @@ impl AABB {
 //
 // BVH Tree Data Structure
 //
+
+// Trait for joint of Renderable + BoundingBox
+// as_bounding_box so trait object can be cast as a BoundingBox
+pub trait BVHItem: Renderable + BoundingBox {
+    fn as_bounding_box(&self) -> &BoundingBox;
+}
+impl<T> BVHItem for T where T: Renderable + BoundingBox {
+    fn as_bounding_box(&self) -> &BoundingBox { self }
+}
+
 pub struct Node {
-    pub left: Option<Box<Hitable>>,
-    pub right: Option<Box<Hitable>>,
+    pub left: Option<Box<BVHItem>>,
+    pub right: Option<Box<BVHItem>>,
     pub bounding_box: AABB,
 }
 
 impl Node {
-    pub fn new(l: HitableList) -> Node {
+    pub fn new(mut hitables: Vec<Box<BVHItem>>) -> Node {
         // Choose random axis and sort the hitables along that axis
         let axis = Vec::from_iter(Axis::iterator())[(random::<u8>() % 3) as usize];
-        let mut hitables = l.items;
-        hitables.sort_by(|a: &Box<Hitable>, b: &Box<Hitable>| {
+        hitables.sort_by(|a: &Box<BVHItem>, b: &Box<BVHItem>| {
             // Explicitly dereference otherwise compiler thinks Hitable not implemented
-            (**a).compare_by_axis(&(**b), axis)
+            (**a).compare_by_axis((**b).as_bounding_box(), axis)
         });
 
         let (left, right, bounding_box);
@@ -95,8 +122,8 @@ impl Node {
             }
             n => {
                 let hitables2 = hitables.split_off(n/2);
-                let lnode = Node::new(HitableList { items: hitables });
-                let rnode = Node::new(HitableList { items: hitables2 });
+                let lnode = Node::new( hitables );
+                let rnode = Node::new( hitables2 );
                 bounding_box = AABB::surrounding_box(&lnode.bounding_box(), &rnode.bounding_box());
                 left = Some(Box::new(lnode));
                 right = Some(Box::new(rnode));
@@ -112,15 +139,15 @@ impl Node {
     }
 }
 
-impl Hitable for Node {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+impl Renderable for Node {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, &Material)> {
         if self.bounding_box.hit(r, t_min, t_max) {
             // If left/right exist, attempt to hit them
             let lhit = self.left.as_ref().and_then(|h| h.hit(r, t_min, t_max));
             let rhit = self.right.as_ref().and_then(|h| h.hit(r, t_min, t_max));
 
             match (&lhit, &rhit) {
-                (&Some(ref lhitrec), &Some(ref rhitrec)) => {
+                (&Some((ref lhitrec, _)), &Some((ref rhitrec, _))) => {
                     if lhitrec.t < rhitrec.t { lhit.clone() } else  { rhit.clone() }
                 }
                 (&Some(_), &None) => lhit.clone(),
@@ -131,7 +158,9 @@ impl Hitable for Node {
             None
         }
     }
+}
 
+impl BoundingBox for Node {
     fn bounding_box(&self) -> AABB {
         self.bounding_box
     }
@@ -184,17 +213,23 @@ mod bvh_tests {
 
     #[test]
     fn unit_bvh() {
-        let unit_bvh = Node::new(HitableList {
-            items: vec![Box::new(Sphere::unit_sphere())]
-        });
+        let unit_bvh = Node::new(
+            vec![Box::new(Model::new(
+                Sphere::unit_sphere(),
+                Material::lambertian_constant(Vec3::new(0.5,0.5,0.5))
+            ))]
+        );
         assert!(unit_bvh.bounding_box == AABB::unit_aabb());
     }
 
     #[test]
     fn bvh_hit() {
-        let unit_bvh = Node::new(HitableList {
-            items: vec![Box::new(Sphere::unit_sphere())]
-        });
+        let unit_bvh = Node::new(
+            vec![Box::new(Model::new(
+                Sphere::unit_sphere(),
+                Material::lambertian_constant(Vec3::new(0.5,0.5,0.5))
+            ))]
+        );
         let r = Ray {
             origin: Vec3::new(0.0,0.0,-2.0),
             dir: Vec3::new(0.0,0.0,2.0),
@@ -205,9 +240,12 @@ mod bvh_tests {
 
     #[test]
     fn bvh_miss() {
-        let unit_bvh = Node::new(HitableList {
-            items: vec![Box::new(Sphere::unit_sphere())]
-        });
+        let unit_bvh = Node::new(
+            vec![Box::new(Model::new(
+                Sphere::unit_sphere(),
+                Material::lambertian_constant(Vec3::new(0.5,0.5,0.5))
+            ))]
+        );
         let r = Ray {
             origin: Vec3::new(0.0,0.0,-2.0),
             dir: Vec3::new(0.0,2.0,2.0),

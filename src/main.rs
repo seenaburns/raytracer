@@ -64,7 +64,7 @@ fn main() {
         _ => {
 
             let (outbuf, runtime) = bench::time(|| {
-                render::render(Box::new(world), &camera, NX, NY, NUM_SAMPLES, true)
+                render::render(world, &camera, NX, NY, NUM_SAMPLES, true)
             });
 
             save_file(&outbuf, NX, NY, "out/out.ppm", Filetype::PPM);

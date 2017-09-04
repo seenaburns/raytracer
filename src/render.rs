@@ -2,11 +2,12 @@
 
 extern crate rand;
 
-use hitable::*;
-use vec3::{Vec3};
 use camera::Camera;
+use model::{bvh, Renderable, Model};
+use model::hitable::Sphere;
 use ray::Ray;
-use material::Material;
+use shader::material::Material;
+use vec3::{Vec3};
 
 use std::io::Write;
 use rand::random;
@@ -31,7 +32,7 @@ const COLOR_DEFAULT: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 // * `ny` - height of image
 // * `spp` - samples per pixel
 pub fn render (
-    scene: Box<Hitable>,
+    scene: Box<Renderable>,
     camera: &Camera,
     nx: i32,
     ny: i32,
@@ -77,11 +78,11 @@ pub fn render (
     outbuf
 }
 
-fn color(r: &Ray, world: &Box<Hitable>, depth: i32) -> Vec3 {
+fn color(r: &Ray, world: &Box<Renderable>, depth: i32) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
-        Some(h) => {
+        Some((h, material)) => {
             if depth < DEPTH_MAX {
-                match ::material::scatter(&h.material, r, &h) {
+                match ::shader::material::scatter(&material, r, &h) {
                     Some((attentuation, scattered)) => {
                         attentuation * color(&scattered, world, depth+1)
                     }
@@ -102,32 +103,40 @@ fn color(r: &Ray, world: &Box<Hitable>, depth: i32) -> Vec3 {
     }
 }
 
-pub fn random_scene() -> ::bvh::Node {
+pub fn random_scene() -> Box<Renderable> {
     let mut items = Vec::new();
 
     // Ground
-    items.push(Sphere {
-        center: Vec3::new(0.0,-1000.0,0.0),
-        radius: 1000.0,
-        material: Material::lambertian_constant(random::<Vec3>()),
-    });
+    items.push(Model::new(
+        Sphere {
+            center: Vec3::new(0.0,-1000.0,0.0),
+            radius: 1000.0
+        },
+        Material::lambertian_constant(random::<Vec3>()),
+    ));
 
     // Big spheres
-    items.push(Sphere {
-        center: Vec3::new(-4.0,1.0,0.0),
-        radius: 1.0,
-        material: Material::lambertian_constant(random::<Vec3>() * random::<Vec3>()),
-    });
-    items.push(Sphere {
-        center: Vec3::new(4.0, 1.0, 0.0),
-        radius: 1.0,
-        material: Material::metal((random::<Vec3>() + 1.0) * 0.5, random::<f64>() * 0.3),
-    });
-    items.push(Sphere {
-        center: Vec3::new(0.0,1.0,0.0),
-        radius: 1.0,
-        material: Material::dielectric(1.5),
-    });
+    items.push(Model::new(
+        Sphere {
+            center: Vec3::new(-4.0,1.0,0.0),
+            radius: 1.0,
+        },
+        Material::lambertian_constant(random::<Vec3>() * random::<Vec3>()),
+    ));
+    items.push(Model::new(
+        Sphere {
+            center: Vec3::new(4.0, 1.0, 0.0),
+            radius: 1.0,
+        },
+        Material::metal((random::<Vec3>() + 1.0) * 0.5, random::<f64>() * 0.3),
+    ));
+    items.push(Model::new(
+        Sphere {
+            center: Vec3::new(0.0,1.0,0.0),
+            radius: 1.0,
+        },
+        Material::dielectric(1.5),
+    ));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -154,17 +163,17 @@ pub fn random_scene() -> ::bvh::Node {
                     m = Material::dielectric(1.5);
 
                 }
-                items.push(Sphere {
-                    center: center,
-                    radius: 0.2,
-                    material: m,
-                });
+                items.push(Model::new(
+                    Sphere {
+                        center: center,
+                        radius: 0.2,
+                    },
+                    m,
+                ));
             }
         }
     }
 
-    let h = HitableList {
-        items: items.into_iter().map(|x| Box::new(x) as Box<Hitable>).collect()
-    };
-    ::bvh::Node::new(h)
+    let bvh_items = items.into_iter().map(|x| Box::new(x) as Box<bvh::BVHItem>).collect();
+    Box::new(bvh::Node::new(bvh_items))
 }

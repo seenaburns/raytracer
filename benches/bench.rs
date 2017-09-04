@@ -4,11 +4,13 @@ extern crate test;
 extern crate raytracer;
 extern crate rand;
 
-use raytracer::hitable::*;
-use raytracer::material::*;
+use raytracer::model::hitable::*;
+use raytracer::model::Model;
+use raytracer::model::Renderable;
+use raytracer::shader::material::*;
 use raytracer::vec3::Vec3;
 use raytracer::ray::Ray;
-use raytracer::bvh::{AABB, Node};
+use raytracer::model::bvh::{AABB, Node};
 use rand::random;
 use rand::distributions::IndependentSample;
 
@@ -26,42 +28,40 @@ const r_miss: Ray = Ray {
 
 #[bench]
 fn bench_sphere_hit(b: &mut test::Bencher) {
-    let unit_sphere = Sphere::unit_sphere();
     b.iter(|| {
-        let res = unit_sphere.hit(&r_hit, 0.0000001, 10000.0);
+        let res = Sphere::unit_sphere().hit(&r_hit, 0.0000001, 10000.0);
     });
 }
 
 #[bench]
 fn bench_sphere_miss(b: &mut test::Bencher) {
-    let unit_sphere = Sphere::unit_sphere();
     b.iter(|| {
-        let res = unit_sphere.hit(&r_miss, 0.0000001, 10000.0);
+        let res = Sphere::unit_sphere().hit(&r_miss, 0.0000001, 10000.0);
     });
 }
 
 #[bench]
 fn bench_aabb_hit(b: &mut test::Bencher) {
-    let unit_aabb = AABB::unit_aabb();
     b.iter(|| {
-        let res = unit_aabb.hit(&r_hit, 0.0000001, 10000.0);
+        let res = AABB::unit_aabb().hit(&r_hit, 0.0000001, 10000.0);
     });
 }
 
 #[bench]
 fn bench_aabb_miss(b: &mut test::Bencher) {
-    let unit_aabb = AABB::unit_aabb();
     b.iter(|| {
-        let res = unit_aabb.hit(&r_miss, 0.0000001, 10000.0);
+        let res = AABB::unit_aabb().hit(&r_miss, 0.0000001, 10000.0);
     });
 }
 
 #[bench]
 fn bench_bvh_hit(b: &mut test::Bencher) {
-    let unit_sphere = Sphere::unit_sphere();
-    let unit_bvh: Node = Node::new(HitableList {
-       items: vec![Box::new(unit_sphere)]
-    });
+    let unit_bvh = Node::new(
+        vec![Box::new(Model::new(
+            Sphere::unit_sphere(),
+            Material::lambertian_constant(Vec3::new(0.5,0.5,0.5))
+        ))]
+    );
     b.iter(|| {
         let res = unit_bvh.hit(&r_hit, 0.0000001, 10000.0);
     });
@@ -69,10 +69,12 @@ fn bench_bvh_hit(b: &mut test::Bencher) {
 
 #[bench]
 fn bench_bvh_miss(b: &mut test::Bencher) {
-    let unit_sphere = Sphere::unit_sphere();
-    let unit_bvh: Node = Node::new(HitableList {
-       items: vec![Box::new(unit_sphere)]
-    });
+    let unit_bvh = Node::new(
+        vec![Box::new(Model::new(
+            Sphere::unit_sphere(),
+            Material::lambertian_constant(Vec3::new(0.5,0.5,0.5))
+        ))]
+    );
     b.iter(|| {
         let res = unit_bvh.hit(&r_miss, 0.0000001, 10000.0);
     });
