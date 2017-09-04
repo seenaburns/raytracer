@@ -20,62 +20,38 @@ pub struct Dielectric {
     index: f64,
 }
 
-// Allow hitable to reference a material
-// Dispatch to the MaterialResponse using scatter
-#[derive(Debug, Clone)]
-pub enum Material {
-    Lambertian  { m: Lambertian },
-    Metal       { m: Metal },
-    Dielectric  { m: Dielectric },
-}
-
 impl Material {
     // Convenience constructors
-    pub fn lambertian_constant(albedo: Vec3) -> Material {
+    pub fn lambertian_constant(albedo: Vec3) -> Lambertian {
         Material::lambertian(TextureEnum::ConstantTexture(constant_texture(albedo)))
     }
 
-    pub fn lambertian(albedo: TextureEnum) -> Material {
-        Material::Lambertian { m:
-            Lambertian {
-                albedo: albedo
-            }
+    pub fn lambertian(albedo: TextureEnum) -> Lambertian {
+        Lambertian {
+            albedo: albedo
         }
     }
 
-    pub fn metal(albedo: Vec3, fuzz: f64) -> Material {
-        Material::Metal { m:
-            Metal {
-                albedo: albedo,
-                fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
-            }
+    pub fn metal(albedo: Vec3, fuzz: f64) -> Metal {
+        Metal {
+            albedo: albedo,
+            fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
         }
     }
 
-    pub fn dielectric(index: f64) -> Material {
-        Material::Dielectric { m:
-            Dielectric {
-                index: index
-            }
+    pub fn dielectric(index: f64) -> Dielectric {
+        Dielectric {
+            index: index
         }
     }
 }
 
-
-pub fn scatter(m: &Material, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
-    match m {
-        &Material::Lambertian { ref m } => m.scatter(r, hit),
-        &Material::Metal { ref m }      => m.scatter(r, hit),
-        &Material::Dielectric { ref m } => m.scatter(r, hit),
-    }
-}
-
-pub trait MaterialResponse {
+pub trait Material {
     // Return attentuation vector and outgoing ray if produced
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)>;
 }
 
-impl MaterialResponse for Lambertian {
+impl Material for Lambertian {
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = hit.p + hit.normal + random_in_unit_sphere();
         let scattered = Ray::new(hit.p, target - hit.p);
@@ -84,7 +60,7 @@ impl MaterialResponse for Lambertian {
     }
 }
 
-impl MaterialResponse for Metal {
+impl Material for Metal {
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let v = r.dir.normalized();
         let reflected = reflect(v, hit.normal);
@@ -98,7 +74,7 @@ impl MaterialResponse for Metal {
     }
 }
 
-impl MaterialResponse for Dielectric {
+impl Material for Dielectric {
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = reflect(r.dir, hit.normal);
         let attentuation = Vec3::new(1.0,1.0,1.0);

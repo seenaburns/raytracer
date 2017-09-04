@@ -82,7 +82,7 @@ fn color(r: &Ray, world: &Box<Renderable>, depth: i32) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some((h, material)) => {
             if depth < DEPTH_MAX {
-                match ::shader::material::scatter(&material, r, &h) {
+                match material.scatter(r, &h) {
                     Some((attentuation, scattered)) => {
                         attentuation * color(&scattered, world, depth+1)
                     }
@@ -104,39 +104,39 @@ fn color(r: &Ray, world: &Box<Renderable>, depth: i32) -> Vec3 {
 }
 
 pub fn random_scene() -> Box<Renderable> {
-    let mut items = Vec::new();
+    let mut items: Vec<Box<bvh::BVHItem>> = Vec::new();
 
     // Ground
-    items.push(Model::new(
+    items.push(Box::new(Model::new(
         Sphere {
             center: Vec3::new(0.0,-1000.0,0.0),
             radius: 1000.0
         },
         Material::lambertian_constant(random::<Vec3>()),
-    ));
+    )));
 
     // Big spheres
-    items.push(Model::new(
+    items.push(Box::new(Model::new(
         Sphere {
             center: Vec3::new(-4.0,1.0,0.0),
             radius: 1.0,
         },
         Material::lambertian_constant(random::<Vec3>() * random::<Vec3>()),
-    ));
-    items.push(Model::new(
+    )));
+    items.push(Box::new(Model::new(
         Sphere {
             center: Vec3::new(4.0, 1.0, 0.0),
             radius: 1.0,
         },
         Material::metal((random::<Vec3>() + 1.0) * 0.5, random::<f64>() * 0.3),
-    ));
-    items.push(Model::new(
+    )));
+    items.push(Box::new(Model::new(
         Sphere {
             center: Vec3::new(0.0,1.0,0.0),
             radius: 1.0,
         },
         Material::dielectric(1.5),
-    ));
+    )));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -147,33 +147,42 @@ pub fn random_scene() -> Box<Renderable> {
                 b as f64 + 0.9 * random::<f64>(),
             );
             if (center - Vec3::new(4.0,0.2,0.0)).length() > 0.9 {
-                let m: Material;
                 if choose_mat < 0.8 {
                     // diffuse
-                    m = Material::lambertian_constant(random::<Vec3>() * random::<Vec3>());
+                    items.push(Box::new(Model::new(
+                        Sphere {
+                            center: center,
+                            radius: 0.2,
+                        },
+                        Material::lambertian_constant(random::<Vec3>() * random::<Vec3>()),
+                    )));
                 } else if choose_mat < 0.95 {
                     // metal
-                    m = Material::metal(
-                        (random::<Vec3>() + 1.0) * 0.5,
-                        0.5 * random::<f64>(),
-                    );
+                    items.push(Box::new(Model::new(
+                        Sphere {
+                            center: center,
+                            radius: 0.2,
+                        },
+                        Material::metal(
+                            (random::<Vec3>() + 1.0) * 0.5,
+                            0.5 * random::<f64>(),
+                        ),
+                    )));
 
                 } else {
                     // glass
-                    m = Material::dielectric(1.5);
+                    items.push(Box::new(Model::new(
+                        Sphere {
+                            center: center,
+                            radius: 0.2,
+                        },
+                        Material::dielectric(1.5),
+                    )));
 
                 }
-                items.push(Model::new(
-                    Sphere {
-                        center: center,
-                        radius: 0.2,
-                    },
-                    m,
-                ));
             }
         }
     }
 
-    let bvh_items = items.into_iter().map(|x| Box::new(x) as Box<bvh::BVHItem>).collect();
-    Box::new(bvh::Node::new(bvh_items))
+    Box::new(bvh::Node::new(items))
 }
