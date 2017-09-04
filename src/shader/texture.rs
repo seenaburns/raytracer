@@ -76,11 +76,25 @@ impl PerlinNoise {
 
     fn noise(&self, p: &Vec3) -> f64 {
         let uvw = p.map(&|x| x - x.floor());
-        let i = ((p.x * 4.0) as i32 & 255) as usize;
-        let j = ((p.y * 4.0) as i32 & 255) as usize;
-        let k = ((p.z * 4.0) as i32 & 255) as usize;
-        let index = (self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k]) as usize;
-        self.rand_float[index]
+        let i = p.x.floor() as i32;
+        let j = p.y.floor() as i32;
+        let k = p.z.floor() as i32;
+        let to_index = |x: i32, dx: i32| ((x+dx) & 255) as usize;
+
+        let mut neighbors = [[[0.0f64; 2]; 2]; 2];
+        for di in 0..2 {
+            for dj in 0..2 {
+                for dk in 0..2 {
+                    let index =
+                        self.perm_x[to_index(i,di)] ^
+                        self.perm_y[to_index(j,dj)] ^
+                        self.perm_z[to_index(k,dk)];
+                    neighbors[di as usize][dj as usize][dk as usize] = self.rand_float[index as usize];
+                }
+            }
+        }
+
+        PerlinNoise::trilinear_interpolate(neighbors, uvw.x, uvw.y, uvw.z)
     }
 
     fn generate_rand_float() -> Vec<f64> {
@@ -111,6 +125,24 @@ impl PerlinNoise {
         }
         PerlinNoise::permute(&mut p);
         p
+    }
+
+    fn trilinear_interpolate(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let mut acc = 0.0;
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let fi = (i as i32 as f64);
+                    let fj = (j as i32 as f64);
+                    let fk = (k as i32 as f64);
+                    acc += (fi*u + (1.0-fi) * (1.0-u)) *
+                           (fj*v + (1.0-fj) * (1.0-v)) *
+                           (fk*w + (1.0-fk) * (1.0-w)) *
+                           c[i as usize][j as usize][k as usize];
+                }
+            }
+        }
+        acc
     }
 }
 
