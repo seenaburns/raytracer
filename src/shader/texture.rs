@@ -4,46 +4,13 @@ use vec3::Vec3;
 //
 // Texture Definition
 //
-pub trait Texture: Debug + TextureClone {
+pub trait Texture: Debug + Clone {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3;
 }
 
-pub trait TextureClone {
-    fn box_clone(&self) -> Box<Texture>;
-}
-
-impl<T> TextureClone for T where T: 'static + Texture + Clone {
-    fn box_clone(&self) -> Box<Texture> {
-         Box::new(self.clone())
-    }
-}
-
 //
-// TextureEnum of all the possible textures
-// Enables static dispatching
+// Constant Texture
 //
-#[derive(Debug, Clone)]
-pub enum TextureEnum {
-    ConstantTexture(ConstantTexture),
-    CheckerTexture(CheckerTexture),
-}
-
-impl TextureEnum {
-    pub fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
-        match *self {
-            TextureEnum::ConstantTexture(ref x) => x.value(u,v,p),
-            TextureEnum::CheckerTexture(ref x) => x.value(u,v,p),
-        }
-    }
-}
-
-impl Clone for Box<Texture> {
-    fn clone(&self) -> Box<Texture> {
-        self.box_clone()
-    }
-}
-
-
 #[derive(Debug, Clone)]
 pub struct ConstantTexture {
     pub color: Vec3,
@@ -55,14 +22,21 @@ impl Texture for ConstantTexture {
     }
 }
 
+//
+// Checker Texture
+// Alternates between two textures in checkerboard pattern
+//
 #[derive(Debug, Clone)]
-pub struct CheckerTexture {
-    pub odd: Box<Texture>,
-    pub even: Box<Texture>,
+pub struct CheckerTexture<T1: Texture, T2: Texture> {
+    pub odd: T1,
+    pub even: T2,
     pub scale: f64,
 }
 
-impl Texture for CheckerTexture {
+impl<T1, T2> Texture for CheckerTexture<T1, T2>
+    where T1: Texture,
+          T2: Texture
+{
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
         let sines = p.map(&|x| (x * self.scale).sin());
         let sines = sines.x * sines.y * sines.z;
@@ -80,10 +54,13 @@ pub fn constant_texture(c: Vec3) -> ConstantTexture {
     ConstantTexture { color: c }
 }
 
-pub fn checker_texture(t0: Box<Texture>, t1: Box<Texture>, scale: f64) -> CheckerTexture {
+pub fn checker_texture<T1, T2>(t1: T1, t2: T2, scale: f64) -> CheckerTexture<T1,T2>
+    where T1: Texture,
+          T2: Texture
+{
     CheckerTexture {
-        odd: t0,
-        even: t1,
+        odd: t1,
+        even: t2,
         scale: scale,
     }
 }

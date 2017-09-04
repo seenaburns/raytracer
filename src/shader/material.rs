@@ -1,12 +1,13 @@
 use vec3::{Vec3, random_in_unit_sphere};
 use ray::Ray;
 use model::hitable::HitRecord;
-use shader::texture::*;
+use shader::texture;
+use shader::texture::Texture;
 use rand::random;
 
 #[derive(Debug, Clone)]
-pub struct Lambertian {
-    pub albedo: TextureEnum,
+pub struct Lambertian<T: Texture> {
+    pub albedo: T,
 }
 
 #[derive(Debug, Clone)]
@@ -22,11 +23,11 @@ pub struct Dielectric {
 
 impl Material {
     // Convenience constructors
-    pub fn lambertian_constant(albedo: Vec3) -> Lambertian {
-        Material::lambertian(TextureEnum::ConstantTexture(constant_texture(albedo)))
+    pub fn lambertian_constant(albedo: Vec3) -> Lambertian<texture::ConstantTexture> {
+        Material::lambertian(texture::constant_texture(albedo))
     }
 
-    pub fn lambertian(albedo: TextureEnum) -> Lambertian {
+    pub fn lambertian<T: Texture>(albedo: T) -> Lambertian<T> {
         Lambertian {
             albedo: albedo
         }
@@ -51,7 +52,9 @@ pub trait Material {
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)>;
 }
 
-impl Material for Lambertian {
+impl<T> Material for Lambertian<T>
+    where T: Texture
+{
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = hit.p + hit.normal + random_in_unit_sphere();
         let scattered = Ray::new(hit.p, target - hit.p);
