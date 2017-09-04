@@ -1,27 +1,28 @@
 use vec3::{Vec3, random_in_unit_sphere};
 use ray::Ray;
 use hitable::HitRecord;
+use texture::*;
 use rand::random;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Lambertian {
-    pub albedo: Vec3
+    pub albedo: TextureEnum,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Metal {
     pub albedo: Vec3,
     fuzz: f64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Dielectric {
     index: f64,
 }
 
 // Allow hitable to reference a material
 // Dispatch to the MaterialResponse using scatter
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Material {
     Lambertian  { m: Lambertian },
     Metal       { m: Metal },
@@ -30,7 +31,11 @@ pub enum Material {
 
 impl Material {
     // Convenience constructors
-    pub fn lambertian(albedo: Vec3) -> Material {
+    pub fn lambertian_constant(albedo: Vec3) -> Material {
+        Material::lambertian(TextureEnum::ConstantTexture(constant_texture(albedo)))
+    }
+
+    pub fn lambertian(albedo: TextureEnum) -> Material {
         Material::Lambertian { m:
             Lambertian {
                 albedo: albedo
@@ -57,11 +62,11 @@ impl Material {
 }
 
 
-pub fn scatter(m: Material, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+pub fn scatter(m: &Material, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
     match m {
-        Material::Lambertian { m } => m.scatter(r, hit),
-        Material::Metal { m }      => m.scatter(r, hit),
-        Material::Dielectric { m } => m.scatter(r, hit),
+        &Material::Lambertian { m: ref m } => m.scatter(r, hit),
+        &Material::Metal { m: ref m }      => m.scatter(r, hit),
+        &Material::Dielectric { m: ref m } => m.scatter(r, hit),
     }
 }
 
@@ -74,7 +79,7 @@ impl MaterialResponse for Lambertian {
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = hit.p + hit.normal + random_in_unit_sphere();
         let scattered = Ray::new(hit.p, target - hit.p);
-        let attentuation = self.albedo;
+        let attentuation = self.albedo.value(0.0,0.0,&hit.p);
         Some((attentuation, scattered))
     }
 }

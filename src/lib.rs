@@ -10,4 +10,5 @@ pub mod render;
 pub mod bvh;
 pub mod util;
 pub mod bench;
+pub mod texture;
 

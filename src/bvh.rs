@@ -119,13 +119,13 @@ impl Hitable for Node {
             let lhit = self.left.as_ref().and_then(|h| h.hit(r, t_min, t_max));
             let rhit = self.right.as_ref().and_then(|h| h.hit(r, t_min, t_max));
 
-            match (lhit, rhit) {
-                (Some(lhitrec), Some(rhitrec)) => {
-                    if lhitrec.t < rhitrec.t { lhit } else  { rhit }
+            match (&lhit, &rhit) {
+                (&Some(ref lhitrec), &Some(ref rhitrec)) => {
+                    if lhitrec.t < rhitrec.t { lhit.clone() } else  { rhit.clone() }
                 }
-                (Some(_), None) => lhit,
-                (None, Some(_)) => rhit,
-                (None, None) => None,
+                (&Some(_), &None) => lhit.clone(),
+                (&None, &Some(_)) => rhit.clone(),
+                (&None, &None) => None,
             }
         } else {
             None

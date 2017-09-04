@@ -31,7 +31,7 @@ const COLOR_DEFAULT: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 // * `ny` - height of image
 // * `spp` - samples per pixel
 pub fn render (
-    scene: &::bvh::Node,
+    scene: Box<Hitable>,
     camera: &Camera,
     nx: i32,
     ny: i32,
@@ -77,11 +77,11 @@ pub fn render (
     outbuf
 }
 
-fn color(r: &Ray, world: &::bvh::Node, depth: i32) -> Vec3 {
+fn color(r: &Ray, world: &Box<Hitable>, depth: i32) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some(h) => {
             if depth < DEPTH_MAX {
-                match ::material::scatter(h.material, r, &h) {
+                match ::material::scatter(&h.material, r, &h) {
                     Some((attentuation, scattered)) => {
                         attentuation * color(&scattered, world, depth+1)
                     }
@@ -109,14 +109,14 @@ pub fn random_scene() -> ::bvh::Node {
     items.push(Sphere {
         center: Vec3::new(0.0,-1000.0,0.0),
         radius: 1000.0,
-        material: Material::lambertian(Vec3::new(0.5,0.5,0.5)),
+        material: Material::lambertian_constant(random::<Vec3>()),
     });
 
     // Big spheres
     items.push(Sphere {
         center: Vec3::new(-4.0,1.0,0.0),
         radius: 1.0,
-        material: Material::lambertian(random::<Vec3>() * random::<Vec3>()),
+        material: Material::lambertian_constant(random::<Vec3>() * random::<Vec3>()),
     });
     items.push(Sphere {
         center: Vec3::new(4.0, 1.0, 0.0),
@@ -141,7 +141,7 @@ pub fn random_scene() -> ::bvh::Node {
                 let m: Material;
                 if choose_mat < 0.8 {
                     // diffuse
-                    m = Material::lambertian(random::<Vec3>() * random::<Vec3>());
+                    m = Material::lambertian_constant(random::<Vec3>() * random::<Vec3>());
                 } else if choose_mat < 0.95 {
                     // metal
                     m = Material::metal(

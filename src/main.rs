@@ -3,15 +3,14 @@ extern crate raytracer;
 
 use raytracer::vec3::{Vec3};
 use raytracer::camera::Camera;
-use raytracer::bench;
-use raytracer::render;
+use raytracer::*;
 
 use std::io::Write;
 use std::fs::File;
 use std::path::Path;
 
-const NX: i32 = 200;
-const NY: i32 = 100;
+const NX: i32 = 400;
+const NY: i32 = 200;
 const NUM_SAMPLES: i32 = 10;
 
 fn main() {
@@ -42,15 +41,30 @@ fn main() {
     //     ]
     // };
 
+    // Two Checker spheres
+    // let checker = texture::checker_texture(
+    //     Box::new(texture::constant_texture(Vec3::new(0.2,0.3,0.1))),
+    //     Box::new(texture::constant_texture(Vec3::new(0.9,0.9,0.9))),
+    //     10.0,
+    // );
+    // let world = hitable::HitableList {
+    //     items: vec![
+    //         Box::new(hitable::Sphere { center: Vec3::new(0.0,-10.0,0.0), radius: 10.0, material: material::Material::lambertian(texture::TextureEnum::CheckerTexture(checker.clone())) }),
+    //         Box::new(hitable::Sphere { center: Vec3::new(0.0, 10.0,0.0), radius: 10.0, material: material::Material::lambertian(texture::TextureEnum::CheckerTexture(checker.clone())) }),
+    //     ]
+    // };
+
+    // Random world
+    let world = render::random_scene();
+
     match std::env::args().nth(1) {
         Some(ref mode) if mode == "bench" => {
-            bench::bench_rays_per_sec(10)
+            bench::bench_rays_per_sec(30)
         }
         _ => {
-            let world = render::random_scene();
 
             let (outbuf, runtime) = bench::time(|| {
-                render::render(&world, &camera, NX, NY, NUM_SAMPLES, false)
+                render::render(Box::new(world), &camera, NX, NY, NUM_SAMPLES, true)
             });
 
             save_file(&outbuf, NX, NY, "out/out.ppm", Filetype::PPM);

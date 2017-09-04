@@ -6,7 +6,7 @@ use util::Axis;
 
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct HitRecord {
     pub t: f64,
     pub p: Vec3,
@@ -34,7 +34,7 @@ pub trait Hitable {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
@@ -48,7 +48,7 @@ impl Sphere {
             t: t,
             p: surface_hit,
             normal: (surface_hit - self.center) / self.radius,
-            material: self.material,
+            material: self.material.clone(),
         }
     }
 
@@ -56,7 +56,7 @@ impl Sphere {
         Sphere {
             center: Vec3::new(0.0,0.0,0.0),
             radius: 1.0,
-            material: Material::lambertian(Vec3::new(0.5,0.5,0.5)),
+            material: Material::lambertian_constant(Vec3::new(0.5,0.5,0.5)),
         }
     }
 }
