@@ -38,7 +38,7 @@ fn main() {
     //     texture::constant_texture(Vec3::new(0.9,0.9,0.9)),
     //     10.0,
     // );
-    let perlin = texture::perlin_noise_texture();
+    let perlin = texture::perlin_noise_texture(5.0, 7);
     let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
         Box::new(Model::new(
             hitable::Sphere {

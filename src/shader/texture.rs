@@ -58,31 +58,34 @@ impl<T1, T2> Texture for CheckerTexture<T1, T2>
 //
 #[derive(Debug, Clone)]
 pub struct PerlinNoise {
-    pub rand_float: Vec<f64>,
+    pub rand_vec: Vec<Vec3>,
     pub perm_x: Vec<i32>,
     pub perm_y: Vec<i32>,
     pub perm_z: Vec<i32>,
+    pub scale: f64,
+    pub turb_depth: i32,
 }
 
 impl PerlinNoise {
-    pub fn new() -> PerlinNoise {
+    pub fn new(scale: f64, turb_depth: i32) -> PerlinNoise {
         PerlinNoise {
-            rand_float: PerlinNoise::generate_rand_float(),
+            rand_vec: PerlinNoise::generate(),
             perm_x: PerlinNoise::generate_perm(),
             perm_y: PerlinNoise::generate_perm(),
             perm_z: PerlinNoise::generate_perm(),
+            scale: scale,
+            turb_depth: turb_depth,
         }
     }
 
     fn noise(&self, p: &Vec3) -> f64 {
         let uvw = p.map(&|x| x - x.floor());
-        let uvw = uvw.map(&|x| x*x*(3.0-2.0*x)); // hermite cubic
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
         let to_index = |x: i32, dx: i32| ((x+dx) & 255) as usize;
 
-        let mut neighbors = [[[0.0f64; 2]; 2]; 2];
+        let mut neighbors = [[[Vec3::new(0.0,0.0,0.0); 2]; 2]; 2];
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
@@ -90,20 +93,60 @@ impl PerlinNoise {
                         self.perm_x[to_index(i,di)] ^
                         self.perm_y[to_index(j,dj)] ^
                         self.perm_z[to_index(k,dk)];
-                    neighbors[di as usize][dj as usize][dk as usize] = self.rand_float[index as usize];
+                    neighbors[di as usize][dj as usize][dk as usize] = self.rand_vec[index as usize];
                 }
             }
         }
 
-        PerlinNoise::trilinear_interpolate(neighbors, uvw.x, uvw.y, uvw.z)
+        PerlinNoise::perlin_interpolate(neighbors, uvw.x, uvw.y, uvw.z)
     }
 
-    fn generate_rand_float() -> Vec<f64> {
+    fn perlin_interpolate(c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let hermite_cubic = |x: f64| x*x*(3.0-2.0*x);
+        let hu = hermite_cubic(u);
+        let hv = hermite_cubic(v);
+        let hw = hermite_cubic(w);
+        let mut acc = 0.0;
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let fi = i as i32 as f64;
+                    let fj = j as i32 as f64;
+                    let fk = k as i32 as f64;
+                    let weight = Vec3::new(u-fi, v-fj, w-fk);
+                    acc += (fi*hu + (1.0-fi) * (1.0-hu)) *
+                           (fj*hv + (1.0-fj) * (1.0-hv)) *
+                           (fk*hw + (1.0-fk) * (1.0-hw)) *
+                           c[i as usize][j as usize][k as usize].dot(weight);
+                }
+            }
+        }
+        acc
+    }
+
+    fn turb(&self, p: &Vec3, depth: i32) -> f64 {
+        let mut acc = 0.0;
+        let mut temp_p = p.clone();
+        let mut weight = 1.0;
+        for _ in 0..depth {
+            acc += self.noise(&temp_p) * weight;
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+        acc.abs()
+    }
+
+    fn generate() -> Vec<Vec3> {
         let mut v = Vec::with_capacity(256);
-        let range = Range::new(0.0,1.0);
+        let range = Range::new(-1.0,1.0);
         let mut rng = rand::thread_rng();
         for _ in 0..256 {
-            v.push(range.ind_sample(&mut rng));
+            v.push(Vec3::new(
+                range.ind_sample(&mut rng),
+                range.ind_sample(&mut rng),
+                range.ind_sample(&mut rng),
+            ).normalized());
         }
         v
     }
@@ -127,29 +170,15 @@ impl PerlinNoise {
         PerlinNoise::permute(&mut p);
         p
     }
-
-    fn trilinear_interpolate(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
-        let mut acc = 0.0;
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
-                    let fi = i as i32 as f64;
-                    let fj = j as i32 as f64;
-                    let fk = k as i32 as f64;
-                    acc += (fi*u + (1.0-fi) * (1.0-u)) *
-                           (fj*v + (1.0-fj) * (1.0-v)) *
-                           (fk*w + (1.0-fk) * (1.0-w)) *
-                           c[i as usize][j as usize][k as usize];
-                }
-            }
-        }
-        acc
-    }
 }
 
 impl Texture for PerlinNoise {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
-        Vec3::new(1.0,1.0,1.0) * self.noise(p)
+        // Perlin
+        // Vec3::new(1.0,1.0,1.0) * 0.5 * (1.0 + self.noise(&(*p * self.scale)))
+
+        // Marble Turbulence
+        Vec3::new(1.0,1.0,1.0) * 0.5 * (1.0 + (self.scale * p.z + 10.0*self.turb(p, self.turb_depth)).sin())
     }
 }
 
@@ -169,6 +198,18 @@ pub fn checker_texture<T1, T2>(t1: T1, t2: T2, scale: f64) -> CheckerTexture<T1,
     }
 }
 
-pub fn perlin_noise_texture() -> PerlinNoise {
-    PerlinNoise::new()
+pub fn perlin_noise_texture(scale: f64, turb_depth: i32) -> PerlinNoise {
+    PerlinNoise::new(scale, turb_depth)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_perlin_generate() {
+        let v = PerlinNoise::generate();
+        for i in v {
+            assert!(i.length() == 1.0);
+        }
+    }
 }
