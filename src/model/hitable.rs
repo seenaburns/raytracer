@@ -1,12 +1,15 @@
 use vec3::Vec3;
 use ray::Ray;
 use model::bvh::{AABB, BoundingBox};
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HitRecord {
     pub t: f64,
     pub p: Vec3,
     pub normal: Vec3,
+    pub u: f64,
+    pub v: f64,
 }
 
 // Hitable trait includes
@@ -29,10 +32,13 @@ pub struct Sphere {
 impl Sphere {
     pub fn hit_at_t(&self, r: &Ray, t: f64) -> HitRecord {
         let surface_hit = r.point_at_parameter(t);
+        let (u, v) = Sphere::get_sphere_uv(&((surface_hit - self.center) / self.radius));
         HitRecord {
             t: t,
             p: surface_hit,
             normal: (surface_hit - self.center) / self.radius,
+            u: u,
+            v: v,
         }
     }
 
@@ -41,6 +47,14 @@ impl Sphere {
             center: Vec3::new(0.0,0.0,0.0),
             radius: 1.0,
         }
+    }
+
+    fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
+        let phi = p.z.atan2(p.x); // angle around axis
+        let theta = p.y.asin(); // angle from down the pole
+        let u = 1.0 - (phi + PI) / (2.0 * PI); // remap (-PI, PI) to (0,1)
+        let v = (theta + PI/2.0) / PI; // remap (-PI/2, PI/2) to (0,1)
+        (u, v)
     }
 }
 

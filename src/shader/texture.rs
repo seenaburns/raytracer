@@ -1,15 +1,41 @@
+extern crate image;
 extern crate rand;
 
 use vec3::Vec3;
 
 use std::fmt::Debug;
 use rand::distributions::{IndependentSample, Range};
+use image::Pixel;
 
 //
 // Texture Definition
 //
 pub trait Texture: Debug + Clone {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3;
+}
+
+// Constructors
+pub fn constant_texture(c: Vec3) -> ConstantTexture {
+    ConstantTexture { color: c }
+}
+
+pub fn checker_texture<T1, T2>(t1: T1, t2: T2, scale: f64) -> CheckerTexture<T1,T2>
+    where T1: Texture,
+          T2: Texture
+{
+    CheckerTexture {
+        odd: t1,
+        even: t2,
+        scale: scale,
+    }
+}
+
+pub fn perlin_noise_texture(scale: f64, turb_depth: i32) -> PerlinNoise {
+    PerlinNoise::new(scale, turb_depth)
+}
+
+pub fn image_texture(path: &str) -> ImageTexture {
+    ImageTexture::new(path)
 }
 
 //
@@ -182,24 +208,43 @@ impl Texture for PerlinNoise {
     }
 }
 
-// Constructors
-pub fn constant_texture(c: Vec3) -> ConstantTexture {
-    ConstantTexture { color: c }
+//
+// Image Texture
+//
+#[derive(Debug, Clone)]
+pub struct ImageTexture {
+    pub img: Box<image::RgbImage>,
+    pub width: u32,
+    pub height: u32,
 }
 
-pub fn checker_texture<T1, T2>(t1: T1, t2: T2, scale: f64) -> CheckerTexture<T1,T2>
-    where T1: Texture,
-          T2: Texture
-{
-    CheckerTexture {
-        odd: t1,
-        even: t2,
-        scale: scale,
+impl ImageTexture {
+    pub fn new(path: &str) -> Self {
+        let img = image::open(&::std::path::Path::new(path))
+          .expect(&format!("Could not open image texture: {}", path)).to_rgb();
+        let (width, height) = img.dimensions();
+        ImageTexture {
+            img: Box::new(img),
+            width: width,
+            height: height,
+        }
     }
 }
 
-pub fn perlin_noise_texture(scale: f64, turb_depth: i32) -> PerlinNoise {
-    PerlinNoise::new(scale, turb_depth)
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+        let i = u * (self.width as f64);
+        let j = (1.0-v) * (self.height as f64);
+
+        let i = i.max(0.0);
+        let i = i.min(self.width as f64 - 1.0);
+
+        let j = j.max(0.0);
+        let j = j.min(self.height as f64 - 1.0);
+
+        let rgb = self.img.get_pixel(i as u32,j as u32).channels();
+        Vec3::new(rgb[0] as f64, rgb[1] as f64, rgb[2] as f64) / 255.0
+    }
 }
 
 #[cfg(test)]

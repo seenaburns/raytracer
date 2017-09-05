@@ -58,7 +58,7 @@ impl<T> Material for Lambertian<T>
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = hit.p + hit.normal + random_in_unit_sphere();
         let scattered = Ray::new(hit.p, target - hit.p);
-        let attentuation = self.albedo.value(0.0,0.0,&hit.p);
+        let attentuation = self.albedo.value(hit.u,hit.v,&hit.p);
         Some((attentuation, scattered))
     }
 }

@@ -1,4 +1,5 @@
 extern crate rand;
+extern crate image;
 extern crate time;
 
 pub mod model;

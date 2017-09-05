@@ -39,6 +39,7 @@ fn main() {
     //     10.0,
     // );
     let perlin = texture::perlin_noise_texture(5.0, 7);
+    let image_texture = texture::image_texture("data/earthimage.jpg");
     let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
         Box::new(Model::new(
             hitable::Sphere {
@@ -52,11 +53,11 @@ fn main() {
                 center: Vec3::new(0.0,2.0,0.0),
                 radius: 2.0,
             },
-            Material::lambertian(perlin.clone()),
+            Material::lambertian(image_texture.clone()),
         )),
     ]);
     let lookfrom = Vec3::new(13.0,2.0,3.0);
-    let lookat = Vec3::new(0.0,0.0,0.0);
+    let lookat = Vec3::new(0.0,2.0,0.0);
     let camera = Camera::new(
         lookfrom,
         lookat,
