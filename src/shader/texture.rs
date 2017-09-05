@@ -76,6 +76,7 @@ impl PerlinNoise {
 
     fn noise(&self, p: &Vec3) -> f64 {
         let uvw = p.map(&|x| x - x.floor());
+        let uvw = uvw.map(&|x| x*x*(3.0-2.0*x)); // hermite cubic
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
@@ -132,9 +133,9 @@ impl PerlinNoise {
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let fi = (i as i32 as f64);
-                    let fj = (j as i32 as f64);
-                    let fk = (k as i32 as f64);
+                    let fi = i as i32 as f64;
+                    let fj = j as i32 as f64;
+                    let fk = k as i32 as f64;
                     acc += (fi*u + (1.0-fi) * (1.0-u)) *
                            (fj*v + (1.0-fj) * (1.0-v)) *
                            (fk*w + (1.0-fk) * (1.0-w)) *
