@@ -21,6 +21,11 @@ pub struct Dielectric {
     index: f64,
 }
 
+#[derive(Debug, Clone)]
+pub struct DiffuseLight<T: Texture> {
+    pub emit: T
+}
+
 impl Material {
     // Convenience constructors
     pub fn lambertian_constant(albedo: Vec3) -> Lambertian<texture::ConstantTexture> {
@@ -45,11 +50,24 @@ impl Material {
             index: index
         }
     }
+
+    pub fn diffuse_light_constant(emit: Vec3) -> DiffuseLight<texture::ConstantTexture> {
+        Material::diffuse_light(texture::constant_texture(emit))
+    }
+
+    pub fn diffuse_light<T: Texture>(emit: T) -> DiffuseLight<T> {
+        DiffuseLight {
+            emit: emit,
+        }
+    }
 }
 
 pub trait Material {
     // Return attentuation vector and outgoing ray if produced
     fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)>;
+
+    // Light emitted
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3>;
 }
 
 impl<T> Material for Lambertian<T>
@@ -60,6 +78,10 @@ impl<T> Material for Lambertian<T>
         let scattered = Ray::new(hit.p, target - hit.p);
         let attentuation = self.albedo.value(hit.u,hit.v,&hit.p);
         Some((attentuation, scattered))
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+        None
     }
 }
 
@@ -74,6 +96,10 @@ impl Material for Metal {
         } else {
             None
         }
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+        None
     }
 }
 
@@ -108,6 +134,21 @@ impl Material for Dielectric {
         };
 
         Some((attentuation, out_ray))
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+        None
+    }
+}
+
+impl<T: Texture> Material for DiffuseLight<T> {
+    fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+        None
+    }
+
+    // Light emitted
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+        Some(self.emit.value(u,v,p))
     }
 }
 

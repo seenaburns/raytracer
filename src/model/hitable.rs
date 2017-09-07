@@ -1,6 +1,7 @@
 use vec3::Vec3;
 use ray::Ray;
 use model::bvh::{AABB, BoundingBox};
+use util::Axis;
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -90,6 +91,45 @@ impl BoundingBox for Sphere {
     }
 }
 
+//
+// XY_RECT
+//
+
+pub struct XYRect {
+    pub x0: f64,
+    pub x1: f64,
+    pub y0: f64,
+    pub y1: f64,
+    pub k: f64,
+}
+
+impl Hitable for XYRect {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let t = (self.k - r.origin.z) / r.dir.z; // find where ray intersects z plane
+
+        if (t < t_min || t > t_max) {
+            return None;
+        }
+
+        let p = r.point_at_parameter(t);
+
+        if (p.x < self.x0 ||
+            p.x > self.x1 ||
+            p.y < self.y0 ||
+            p.y > self.y1) {
+            return None;
+        }
+
+        Some(HitRecord {
+            t: t,
+            p: p,
+            normal: Vec3::new(0.0,0.0,r.dir.z.signum() * -1.0), // normal along z axis, but opposite of ray dir
+            u: (p.x - self.x0) / (self.x1 - self.x0),
+            v: (p.y - self.y0) / (self.y1 - self.y0),
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,7 +148,13 @@ mod tests {
           t: 1.0,
           p: Vec3::new(0.0, 0.0, 0.0),
           normal: Vec3::new(0.0, 0.0, 1.0),
+          u: 0.0,
+          v: 0.0,
         };
-        assert!(s.hit(&r, -100.0, 100.0) == Some(expected))
+        let res = s.hit(&r, -100.0, 100.0);
+        assert!(res.clone().is_some());
+        assert!(res.clone().unwrap().t == expected.t);
+        assert!(res.clone().unwrap().p == expected.p);
+        assert!(res.clone().unwrap().normal == expected.normal);
     }
 }

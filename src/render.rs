@@ -81,13 +81,14 @@ pub fn render (
 fn color(r: &Ray, world: &Box<Renderable>, depth: i32) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some((h, material)) => {
+            let emitted = material.emitted(h.u, h.v, &h.p).unwrap_or(Vec3::new(0.0,0.0,0.0));
             if depth < DEPTH_MAX {
                 match material.scatter(r, &h) {
                     Some((attentuation, scattered)) => {
-                        attentuation * color(&scattered, world, depth+1)
+                        emitted + attentuation * color(&scattered, world, depth+1)
                     }
                     // No scatter ray produced
-                    None => COLOR_DEFAULT
+                    None => emitted
                 }
             } else {
                 // Depth exceeded default color
@@ -96,9 +97,14 @@ fn color(r: &Ray, world: &Box<Renderable>, depth: i32) -> Vec3 {
         }
         None => {
             // Background
-            let unit_dir = r.dir.normalized();
-            let t = 0.5 * (unit_dir.y + 1.0);
-            COLOR_WHITE * (1.0-t) + COLOR_BLUE * (t)
+
+            // Sky
+            // let unit_dir = r.dir.normalized();
+            // let t = 0.5 * (unit_dir.y + 1.0);
+            // COLOR_WHITE * (1.0-t) + COLOR_BLUE * (t)
+
+            // Black
+            COLOR_DEFAULT
         }
     }
 }
