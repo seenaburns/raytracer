@@ -24,6 +24,16 @@ impl Vec3 {
         }
     }
 
+    pub fn set_axis(&self, a: &Axis, value: f64) -> Vec3 {
+        let mut new_v = self.clone();
+        match a {
+            &Axis::X => new_v.x = value,
+            &Axis::Y => new_v.y = value,
+            &Axis::Z => new_v.z = value,
+        };
+        new_v
+    }
+
     pub fn map(self, f: &Fn(f64) -> f64) -> Vec3 {
         Vec3 { x: f(self.x), y: f(self.y), z: f(self.z), }
     }

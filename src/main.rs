@@ -12,25 +12,12 @@ use std::io::Write;
 use std::fs::File;
 use std::path::Path;
 
-const NX: i32 = 400;
+const NX: i32 = 200;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 400;
+const NUM_SAMPLES: i32 = 800;
 
 fn main() {
-    // let m: Material = Material::lambertian(Vec3::new(0.5,0.5,0.5));
-    //
-    // let R = (::std::f64::consts::PI / 4.0).cos();
-    // let world: HitableList<Sphere> = HitableList {
-    //     items: vec![
-    //         Sphere { center: Vec3::new(0.0,0.0,-1.0),     radius: 0.5,   material: Material::lambertian(Vec3::new(0.1,0.2,0.5))},
-    //         Sphere { center: Vec3::new(0.0,-100.5,-1.0),  radius: 100.0, material: Material::lambertian(Vec3::new(0.8,0.8,0.0))}, // ground
-    //         Sphere { center: Vec3::new(1.0,0.0,-1.0),     radius: 0.5,   material: Material::metal(Vec3::new(0.8,0.6,0.2), 0.0)},
-    //         Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: 0.5,   material: Material::dielectric(1.5)},
-    //         Sphere { center: Vec3::new(-1.0,0.0,-1.0),    radius: -0.45, material: Material::dielectric(1.5)},
-    //         // Sphere { center: Vec3::new(-R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(0.0, 0.0, 1.0))},
-    //         // Sphere { center: Vec3::new( R,0.0,-1.0),     radius: R,   material: Material::lambertian(Vec3::new(1.0, 0.0, 0.0))},
-    //     ]
-    // };
+    // TODO: Read scene data from file, not from code
 
     // Two Checker spheres
     // let checker = texture::checker_texture(
@@ -38,52 +25,101 @@ fn main() {
     //     texture::constant_texture(Vec3::new(0.9,0.9,0.9)),
     //     10.0,
     // );
-    let perlin = texture::perlin_noise_texture(5.0, 7);
+    // let perlin = texture::perlin_noise_texture(5.0, 7);
     // let image_texture = texture::image_texture("data/earthimage.jpg");
+    // let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
+    //     Box::new(Model::new(
+    //         hitable::Sphere {
+    //             center: Vec3::new(0.0,-1000.0,0.0),
+    //             radius: 1000.0,
+    //         },
+    //         Material::lambertian(perlin.clone()),
+    //     )),
+    //     Box::new(Model::new(
+    //         hitable::Sphere {
+    //             center: Vec3::new(0.0,2.0,0.0),
+    //             radius: 2.0,
+    //         },
+    //         Material::lambertian(perlin.clone()),
+    //     )),
+    //     Box::new(Model::new(
+    //         hitable::Sphere {
+    //             center: Vec3::new(0.0,8.0,0.0),
+    //             radius: 2.0,
+    //         },
+    //         Material::diffuse_light_constant(Vec3::new(4.0,4.0,4.0)),
+    //     )),
+    //     Box::new(Model::new(
+    //         hitable::Rect::xy_rect(
+    //              3.0,
+    //              5.0,
+    //              1.0,
+    //              3.0,
+    //              -2.0
+    //         ),
+    //         Material::diffuse_light_constant(Vec3::new(4.0,4.0,4.0)),
+    //     )),
+    // ]);
+    // let lookfrom = Vec3::new(26.0,6.0,3.0);
+    // let lookat = Vec3::new(0.0,2.0,0.0);
+    // let camera = Camera::new(
+    //     lookfrom,
+    //     lookat,
+    //     Vec3::new(0.0, 1.0, 0.0),
+    //     20.0,
+    //     (NX as f64) / (NY as f64),
+    //     0.0,
+    //     (lookfrom - lookat).length(),
+    // );
+
+    // Cornell Box
+    let mat_red   = Material::lambertian_constant(Vec3::new(0.65,0.05,0.05));
+    let mat_green = Material::lambertian_constant(Vec3::new(0.12,0.45,0.15));
+    let mat_white = Material::lambertian_constant(Vec3::new(0.73,0.73,0.73));
+    let mat_light = Material::diffuse_light_constant(Vec3::new(15.0,15.0,15.0));
     let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
+        // Colored walls
         Box::new(Model::new(
-            hitable::Sphere {
-                center: Vec3::new(0.0,-1000.0,0.0),
-                radius: 1000.0,
-            },
-            Material::lambertian(perlin.clone()),
+            hitable::Hitable::flip_normals(hitable::Rect::yz_rect(0.0,555.0,0.0,555.0,555.0)),
+            mat_green.clone()
         )),
         Box::new(Model::new(
-            hitable::Sphere {
-                center: Vec3::new(0.0,2.0,0.0),
-                radius: 2.0,
-            },
-            Material::lambertian(perlin.clone()),
+            hitable::Rect::yz_rect(0.0,555.0,0.0,555.0,0.0),
+            mat_red.clone()
         )),
+        // Light
         Box::new(Model::new(
-            hitable::Sphere {
-                center: Vec3::new(0.0,8.0,0.0),
-                radius: 2.0,
-            },
-            Material::diffuse_light_constant(Vec3::new(4.0,4.0,4.0)),
+            hitable::Rect::xz_rect(213.0,343.0,227.0,332.0,554.0),
+            mat_light.clone()
         )),
+        // Ceiling
         Box::new(Model::new(
-            hitable::XYRect {
-                x0: 3.0,
-                x1: 5.0,
-                y0: 1.0,
-                y1: 3.0,
-                k: -2.0
-            },
-            Material::diffuse_light_constant(Vec3::new(4.0,4.0,4.0)),
+            hitable::Hitable::flip_normals(hitable::Rect::xz_rect(0.0,555.0,0.0,555.0,555.0)),
+            mat_white.clone()
+        )),
+        // Floor
+        Box::new(Model::new(
+            hitable::Rect::xz_rect(0.0,555.0,0.0,555.0,0.0),
+            mat_white.clone()
+        )),
+        // Back wall
+        Box::new(Model::new(
+            hitable::Rect::xy_rect(0.0,555.0,0.0,555.0,0.0),
+            mat_white.clone()
         )),
     ]);
-    let lookfrom = Vec3::new(26.0,6.0,3.0);
-    let lookat = Vec3::new(0.0,2.0,0.0);
+    let lookfrom = Vec3::new(275.0,400.0,2000.0);
+    let lookat = Vec3::new(275.0,250.0,0.0);
     let camera = Camera::new(
         lookfrom,
         lookat,
         Vec3::new(0.0, 1.0, 0.0),
-        20.0,
+        25.0,
         (NX as f64) / (NY as f64),
         0.0,
         (lookfrom - lookat).length(),
     );
+
 
     // Random world
     // let world = render::random_scene();
