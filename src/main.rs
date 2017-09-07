@@ -11,10 +11,11 @@ use raytracer::shader::material::Material;
 use std::io::Write;
 use std::fs::File;
 use std::path::Path;
+use std::sync::Arc;
 
 const NX: i32 = 200;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 800;
+const NUM_SAMPLES: i32 = 400;
 
 fn main() {
     // TODO: Read scene data from file, not from code
@@ -143,7 +144,7 @@ fn main() {
         _ => {
 
             let (outbuf, runtime) = bench::time(|| {
-                render::render(world, &camera, NX, NY, NUM_SAMPLES, true)
+                render::render(world, Arc::new(camera), NX, NY, NUM_SAMPLES, 4, true)
             });
 
             save_file(&outbuf, NX, NY, "out/out.ppm", Filetype::PPM);

@@ -6,7 +6,7 @@ use model::hitable::{HitRecord, Hitable};
 use ray::Ray;
 use shader::material::Material;
 
-pub trait Renderable {
+pub trait Renderable: Sync + Send {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, &Material)>;
 }
 
@@ -17,6 +17,16 @@ pub struct Model<G, M>
     pub geometry: G,
     pub shader: M,
 }
+
+unsafe impl<G, M> Sync for Model<G, M>
+    where G: Hitable,
+          M: Material
+{}
+
+unsafe impl<G, M> Send for Model<G, M>
+    where G: Hitable,
+          M: Material
+{}
 
 impl<G, M> Model<G, M>
     where G: Hitable,
