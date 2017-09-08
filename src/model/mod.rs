@@ -1,5 +1,8 @@
 pub mod bvh;
 pub mod hitable;
+pub mod sphere;
+pub mod cube;
+pub mod rect;
 
 use model::bvh::{AABB, BoundingBox};
 use model::hitable::{HitRecord, Hitable};
@@ -60,12 +63,9 @@ impl Renderable for Vec<Box<Renderable>> {
         let mut hit = None;
         let mut closest = t_max;
         for x in self {
-            match x.hit(r,t_min,closest) {
-                Some((h, m)) => {
-                    closest = h.t;
-                    hit = Some((h, m))
-                },
-                None => ()
+            if let Some((h, m)) = x.hit(r,t_min,closest) {
+                closest = h.t;
+                hit = Some((h, m))
             }
         }
         hit

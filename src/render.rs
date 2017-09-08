@@ -4,7 +4,7 @@ extern crate rand;
 
 use camera::Camera;
 use model::{bvh, Renderable, Model};
-use model::hitable::Sphere;
+use model::sphere::Sphere;
 use ray::Ray;
 use shader::material::Material;
 use vec3::{Vec3};

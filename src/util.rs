@@ -14,3 +14,6 @@ impl Axis {
     }
 }
 
+pub fn approx_float_eq(f1: f64, f2: f64) -> bool {
+    (f1-f2).abs() < 0.000001
+}

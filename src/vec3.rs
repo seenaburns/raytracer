@@ -3,6 +3,8 @@ extern crate rand;
 use std::ops::*;
 use rand::{Rand, Rng, random};
 use util::Axis;
+use std::f64;
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
@@ -69,6 +71,47 @@ impl Vec3 {
             y: -(self.x * other.z - self.z * other.x),
             z:  (self.x * other.y - self.y * other.x),
         }
+    }
+
+    pub fn rotate(&self, axis: &Axis, degrees: f64) -> Vec3 {
+        match axis {
+            &Axis::X => self.rotate_x(degrees),
+            &Axis::Y => self.rotate_y(degrees),
+            &Axis::Z => self.rotate_z(degrees),
+        }
+    }
+
+    pub fn rotate_x(&self, degrees: f64) -> Vec3 {
+        let radians = (PI / 180.0) * degrees;
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+
+        self.set_axis(&Axis::Y, cos_theta*self.y - sin_theta*self.z)
+            .set_axis(&Axis::Z, sin_theta*self.y + cos_theta*self.z)
+    }
+
+    pub fn rotate_y(&self, degrees: f64) -> Vec3 {
+        let radians = (PI / 180.0) * degrees;
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+
+        self.set_axis(&Axis::X,  cos_theta*self.x + sin_theta*self.z)
+            .set_axis(&Axis::Z, -sin_theta*self.x + cos_theta*self.z)
+    }
+
+    pub fn rotate_z(&self, degrees: f64) -> Vec3 {
+        let radians = (PI / 180.0) * degrees;
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+
+        self.set_axis(&Axis::X, cos_theta*self.x - sin_theta*self.y)
+            .set_axis(&Axis::Y, sin_theta*self.x + cos_theta*self.y)
+    }
+
+    pub fn approx_float_eq(a: &Vec3, b: &Vec3) -> bool {
+        ::util::approx_float_eq(a.x, b.x) &&
+        ::util::approx_float_eq(a.y, b.y) &&
+        ::util::approx_float_eq(a.z, b.z)
     }
 }
 
@@ -243,5 +286,41 @@ mod tests {
         let a = Vec3::new(1.0,2.0,3.0);
         let b = Vec3::new(4.0,5.0,6.0);
         assert!(a.cross(b) == Vec3::new(-3.0,6.0,-3.0))
+    }
+
+    #[test]
+    fn test_rotate_x_360() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_x(360.0), &a));
+    }
+
+    #[test]
+    fn test_rotate_x_inverse() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_x(90.0).rotate_x(-90.0), &a));
+    }
+
+    #[test]
+    fn test_rotate_y_360() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_y(360.0), &a));
+    }
+
+    #[test]
+    fn test_rotate_y_inverse() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_y(90.0).rotate_y(-90.0), &a));
+    }
+
+    #[test]
+    fn test_rotate_z_360() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_z(360.0), &a));
+    }
+
+    #[test]
+    fn test_rotate_z_inverse() {
+        let a = Vec3::new(1.0,2.0,3.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_z(90.0).rotate_z(-90.0), &a));
     }
 }

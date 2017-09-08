@@ -5,8 +5,13 @@ use raytracer::*;
 use raytracer::vec3::{Vec3};
 use raytracer::camera::Camera;
 use raytracer::model::{hitable, Renderable, Model};
+use raytracer::model::hitable::{flip_normals, translate, rotate};
+use raytracer::model::cube::Cube;
+use raytracer::model::rect::Rect;
+use raytracer::model::sphere::Sphere;
 use raytracer::shader::texture;
 use raytracer::shader::material::Material;
+use raytracer::util::Axis;
 
 use std::io::Write;
 use std::fs::File;
@@ -15,7 +20,7 @@ use std::sync::Arc;
 
 const NX: i32 = 200;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 400;
+const NUM_SAMPLES: i32 = 2000;
 
 fn main() {
     // TODO: Read scene data from file, not from code
@@ -51,7 +56,7 @@ fn main() {
     //         Material::diffuse_light_constant(Vec3::new(4.0,4.0,4.0)),
     //     )),
     //     Box::new(Model::new(
-    //         hitable::Rect::xy_rect(
+    //         Rect::xy_rect(
     //              3.0,
     //              5.0,
     //              1.0,
@@ -81,41 +86,64 @@ fn main() {
     let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
         // Colored walls
         Box::new(Model::new(
-            hitable::Hitable::flip_normals(hitable::Rect::yz_rect(0.0,555.0,0.0,555.0,555.0)),
+            flip_normals(Rect::yz_rect(0.0,555.0,0.0,555.0,555.0)),
             mat_green.clone()
         )),
         Box::new(Model::new(
-            hitable::Rect::yz_rect(0.0,555.0,0.0,555.0,0.0),
+            Rect::yz_rect(0.0,555.0,0.0,555.0,0.0),
             mat_red.clone()
         )),
         // Light
         Box::new(Model::new(
-            hitable::Rect::xz_rect(213.0,343.0,227.0,332.0,554.0),
+            Rect::xz_rect(213.0,343.0,227.0,332.0,554.0),
             mat_light.clone()
         )),
         // Ceiling
         Box::new(Model::new(
-            hitable::Hitable::flip_normals(hitable::Rect::xz_rect(0.0,555.0,0.0,555.0,555.0)),
+            flip_normals(Rect::xz_rect(0.0,555.0,0.0,555.0,555.0)),
             mat_white.clone()
         )),
         // Floor
         Box::new(Model::new(
-            hitable::Rect::xz_rect(0.0,555.0,0.0,555.0,0.0),
+            Rect::xz_rect(0.0,555.0,0.0,555.0,0.0),
             mat_white.clone()
         )),
         // Back wall
         Box::new(Model::new(
-            hitable::Rect::xy_rect(0.0,555.0,0.0,555.0,0.0),
+            flip_normals(Rect::xy_rect(0.0,555.0,0.0,555.0,555.0)),
+            mat_white.clone()
+        )),
+        // Cubes
+        Box::new(Model::new(
+            translate(
+                rotate(
+                    Cube::new(Vec3::new(165.0,165.0,165.0)),
+                    Axis::Y,
+                    -18.0
+                ),
+                Vec3::new(130.0,0.0,65.0)
+            ),
+            mat_white.clone()
+        )),
+        Box::new(Model::new(
+            translate(
+                rotate(
+                    Cube::new(Vec3::new(165.0,330.0,165.0)),
+                    Axis::Y,
+                    15.0
+                ),
+                Vec3::new(265.0,0.0,295.0)
+            ),
             mat_white.clone()
         )),
     ]);
-    let lookfrom = Vec3::new(275.0,400.0,2000.0);
-    let lookat = Vec3::new(275.0,250.0,0.0);
+    let lookfrom = Vec3::new(275.0,275.0,-950.0);
+    let lookat = Vec3::new(275.0,275.0,0.0);
     let camera = Camera::new(
         lookfrom,
         lookat,
         Vec3::new(0.0, 1.0, 0.0),
-        25.0,
+        35.0,
         (NX as f64) / (NY as f64),
         0.0,
         (lookfrom - lookat).length(),

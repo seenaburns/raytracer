@@ -75,6 +75,22 @@ impl AABB {
             max: Vec3::new( 1.0, 1.0, 1.0),
         }
     }
+
+    // Return list of each of the edge points
+    pub fn vertices(&self) -> Vec<Vec3> {
+        let mut v = vec![];
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = (i as i32 as f64)*self.max.x + ((1-i) as i32 as f64)*self.min.x;
+                    let y = (j as i32 as f64)*self.max.y + ((1-j) as i32 as f64)*self.min.y;
+                    let z = (k as i32 as f64)*self.max.z + ((1-k) as i32 as f64)*self.min.z;
+                    v.push(Vec3::new(x,y,z));
+                }
+            }
+        }
+        v
+    }
 }
 
 //
@@ -210,6 +226,7 @@ mod tests {
 #[cfg(test)]
 mod bvh_tests {
     use super::*;
+    use model::sphere::Sphere;
 
     #[test]
     fn unit_bvh() {
