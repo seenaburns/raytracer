@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 const NX: i32 = 200;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 2000;
+const NUM_SAMPLES: i32 = 500;
 
 fn main() {
     // TODO: Read scene data from file, not from code

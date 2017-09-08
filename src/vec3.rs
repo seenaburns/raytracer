@@ -73,37 +73,27 @@ impl Vec3 {
         }
     }
 
-    pub fn rotate(&self, axis: &Axis, degrees: f64) -> Vec3 {
+    // Rotate
+    // Takes in a precomputed cos(theta) and sin(theta) for efficiency
+    pub fn rotate(&self, axis: &Axis, cos_theta: f64, sin_theta: f64) -> Vec3 {
         match axis {
-            &Axis::X => self.rotate_x(degrees),
-            &Axis::Y => self.rotate_y(degrees),
-            &Axis::Z => self.rotate_z(degrees),
+            &Axis::X => self.rotate_x(cos_theta, sin_theta),
+            &Axis::Y => self.rotate_y(cos_theta, sin_theta),
+            &Axis::Z => self.rotate_z(cos_theta, sin_theta),
         }
     }
 
-    pub fn rotate_x(&self, degrees: f64) -> Vec3 {
-        let radians = (PI / 180.0) * degrees;
-        let sin_theta = radians.sin();
-        let cos_theta = radians.cos();
-
+    pub fn rotate_x(&self, cos_theta: f64, sin_theta: f64) -> Vec3 {
         self.set_axis(&Axis::Y, cos_theta*self.y - sin_theta*self.z)
             .set_axis(&Axis::Z, sin_theta*self.y + cos_theta*self.z)
     }
 
-    pub fn rotate_y(&self, degrees: f64) -> Vec3 {
-        let radians = (PI / 180.0) * degrees;
-        let sin_theta = radians.sin();
-        let cos_theta = radians.cos();
-
+    pub fn rotate_y(&self, cos_theta: f64, sin_theta: f64) -> Vec3 {
         self.set_axis(&Axis::X,  cos_theta*self.x + sin_theta*self.z)
             .set_axis(&Axis::Z, -sin_theta*self.x + cos_theta*self.z)
     }
 
-    pub fn rotate_z(&self, degrees: f64) -> Vec3 {
-        let radians = (PI / 180.0) * degrees;
-        let sin_theta = radians.sin();
-        let cos_theta = radians.cos();
-
+    pub fn rotate_z(&self, cos_theta: f64, sin_theta: f64) -> Vec3 {
         self.set_axis(&Axis::X, cos_theta*self.x - sin_theta*self.y)
             .set_axis(&Axis::Y, sin_theta*self.x + cos_theta*self.y)
     }

@@ -102,13 +102,15 @@ impl<H: Hitable + BoundingBox> BoundingBox for Translate<H> {
 pub struct Rotate<H: Hitable + BoundingBox> {
     h: H,
     axis: Axis,
-    degrees: f64,
+    cos_theta: f64,
+    sin_theta: f64,
     bounding_box: AABB,
 }
 
 impl<H: Hitable + BoundingBox> Rotate<H> {
     pub fn new(h: H, axis: Axis, degrees: f64) -> Rotate<H> {
-        let radians = (PI / 180.0) * degrees;
+        let (cos_theta, sin_theta) = ::util::degrees_to_cos_and_sin(degrees);
+
         // Create bounding box
         let mut min = Vec3::new(f64::NEG_INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY);
         let mut max = Vec3::new(f64::INFINITY,f64::INFINITY,f64::INFINITY);
@@ -118,7 +120,7 @@ impl<H: Hitable + BoundingBox> Rotate<H> {
         // Iterate over every point on bounding box, find rotated point position
         // Expand bounding box if needed
         for v in bbox.vertices() {
-            let rot_v = v.rotate(&axis, degrees);
+            let rot_v = v.rotate(&axis, cos_theta, sin_theta);
 
             for a in Axis::iterator() {
                 if rot_v.get_axis(a) > max.get_axis(a) {
@@ -133,7 +135,8 @@ impl<H: Hitable + BoundingBox> Rotate<H> {
         Rotate {
             h: h,
             axis: axis,
-            degrees: degrees,
+            cos_theta: cos_theta,
+            sin_theta: sin_theta,
             bounding_box: AABB {
                 min: min,
                 max: max,
@@ -144,15 +147,16 @@ impl<H: Hitable + BoundingBox> Rotate<H> {
 
 impl<H: Hitable + BoundingBox> Hitable for Rotate<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        // Rotatel ray by -degrees
         let moved_r = Ray {
-            origin: r.origin.rotate(&self.axis, -self.degrees),
-            dir: r.dir.rotate(&self.axis, -self.degrees),
+            origin: r.origin.rotate(&self.axis, self.cos_theta, -self.sin_theta),
+            dir: r.dir.rotate(&self.axis, self.cos_theta, -self.sin_theta),
         };
 
         self.h.hit(&moved_r, t_min, t_max).map(|x| {
             HitRecord {
-                p: x.p.rotate(&self.axis, self.degrees),
-                normal: x.normal.rotate(&self.axis, self.degrees),
+                p: x.p.rotate(&self.axis, self.cos_theta, self.sin_theta),
+                normal: x.normal.rotate(&self.axis, self.cos_theta, self.sin_theta),
                 .. x
             }
         })
