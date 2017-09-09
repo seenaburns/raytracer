@@ -86,7 +86,7 @@ pub fn render (
                     }
 
                     // Write percentage progress
-                    if debug && j % (slice / 10) == 0 {
+                    if debug && j % ::std::cmp::max(slice / 10, 1) == 0 {
                         writeln!(&mut ::std::io::stderr(), "{}: {}/{}", nth, slice-(j-start), slice).unwrap();
                     }
                 }
