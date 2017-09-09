@@ -18,8 +18,11 @@ const MIN_DISTANCE: f64 = 0.000001;
 const MAX_DISTANCE: f64 = 1000.0;
 const DEPTH_MAX: i32 = 50;
 
+#[allow(unused)]
 const COLOR_BLUE:    Vec3 = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
+#[allow(unused)]
 const COLOR_WHITE:   Vec3 = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+#[allow(unused)]
 const COLOR_DEFAULT: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 
 
@@ -74,6 +77,7 @@ pub fn render (
                         // Gamma correct to 2: output color ^ (1/gamma) = x^(1/2) = sqrt
                         let c = c.map(&|x: f64| x.sqrt());
                         let c = c * 255.99;
+                        let c = c.map(&|x: f64| if x > 256.99 { 255.99 } else { x });
 
                         // Save to buffer for image out
                         outbuf.push(c.x as i32);
