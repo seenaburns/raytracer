@@ -1,6 +1,7 @@
 use vec3::{Vec3, random_in_unit_disk};
 use ray::Ray;
 
+#[allow(unused)]
 pub struct Camera {
     lower_left_corner: Vec3,
     horizontal: Vec3,

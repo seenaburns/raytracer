@@ -1,6 +1,5 @@
 use model::Renderable;
 use model::hitable::*;
-use model::Model;
 use rand::random;
 use ray::Ray;
 use shader::material::Material;
@@ -227,6 +226,7 @@ mod tests {
 mod bvh_tests {
     use super::*;
     use model::sphere::Sphere;
+    use model::Model;
 
     #[test]
     fn unit_bvh() {

@@ -47,7 +47,7 @@ pub struct ConstantTexture {
 }
 
 impl Texture for ConstantTexture {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, _u: f64, _v: f64, _p: &Vec3) -> Vec3 {
         self.color
     }
 }
@@ -199,7 +199,7 @@ impl PerlinNoise {
 }
 
 impl Texture for PerlinNoise {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, _u: f64, _v: f64, p: &Vec3) -> Vec3 {
         // Perlin
         // Vec3::new(1.0,1.0,1.0) * 0.5 * (1.0 + self.noise(&(*p * self.scale)))
 
@@ -232,7 +232,7 @@ impl ImageTexture {
 }
 
 impl Texture for ImageTexture {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, u: f64, v: f64, _p: &Vec3) -> Vec3 {
         let i = u * (self.width as f64);
         let j = (1.0-v) * (self.height as f64);
 

@@ -3,6 +3,7 @@ pub mod hitable;
 pub mod sphere;
 pub mod cube;
 pub mod rect;
+pub mod constant_medium;
 
 use model::bvh::{AABB, BoundingBox};
 use model::hitable::{HitRecord, Hitable};

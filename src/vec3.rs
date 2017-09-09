@@ -4,7 +4,6 @@ use std::ops::*;
 use rand::{Rand, Rng, random};
 use util::Axis;
 use std::f64;
-use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
@@ -281,36 +280,47 @@ mod tests {
     #[test]
     fn test_rotate_x_360() {
         let a = Vec3::new(1.0,2.0,3.0);
-        assert!(Vec3::approx_float_eq(&a.rotate_x(360.0), &a));
+        let (ct, st) = ::util::degrees_to_cos_and_sin(360.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_x(ct, st), &a));
     }
 
     #[test]
     fn test_rotate_x_inverse() {
         let a = Vec3::new(1.0,2.0,3.0);
-        assert!(Vec3::approx_float_eq(&a.rotate_x(90.0).rotate_x(-90.0), &a));
+        let (ct, st) = ::util::degrees_to_cos_and_sin(90.0);
+        let (neg_ct, neg_st) = ::util::degrees_to_cos_and_sin(-90.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_x(ct,st).rotate_x(neg_ct,neg_st), &a));
     }
 
     #[test]
     fn test_rotate_y_360() {
         let a = Vec3::new(1.0,2.0,3.0);
-        assert!(Vec3::approx_float_eq(&a.rotate_y(360.0), &a));
+        let (ct, st) = ::util::degrees_to_cos_and_sin(360.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_y(ct, st), &a));
     }
 
     #[test]
     fn test_rotate_y_inverse() {
         let a = Vec3::new(1.0,2.0,3.0);
-        assert!(Vec3::approx_float_eq(&a.rotate_y(90.0).rotate_y(-90.0), &a));
+        let (ct, st) = ::util::degrees_to_cos_and_sin(90.0);
+        let (neg_ct, neg_st) = ::util::degrees_to_cos_and_sin(-90.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_y(ct,st).rotate_y(neg_ct,neg_st), &a));
     }
+
 
     #[test]
     fn test_rotate_z_360() {
         let a = Vec3::new(1.0,2.0,3.0);
-        assert!(Vec3::approx_float_eq(&a.rotate_z(360.0), &a));
+        let (ct, st) = ::util::degrees_to_cos_and_sin(360.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_z(ct, st), &a));
     }
 
     #[test]
     fn test_rotate_z_inverse() {
         let a = Vec3::new(1.0,2.0,3.0);
-        assert!(Vec3::approx_float_eq(&a.rotate_z(90.0).rotate_z(-90.0), &a));
+        let (ct, st) = ::util::degrees_to_cos_and_sin(90.0);
+        let (neg_ct, neg_st) = ::util::degrees_to_cos_and_sin(-90.0);
+        assert!(Vec3::approx_float_eq(&a.rotate_z(ct,st).rotate_z(neg_ct,neg_st), &a));
     }
+
 }

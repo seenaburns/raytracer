@@ -26,6 +26,12 @@ pub struct DiffuseLight<T: Texture> {
     pub emit: T
 }
 
+// Isotropic for volume
+#[derive(Debug, Clone)]
+pub struct Isotropic<T: Texture> {
+    pub albedo: T,
+}
+
 impl Material {
     // Convenience constructors
     pub fn lambertian_constant(albedo: Vec3) -> Lambertian<texture::ConstantTexture> {
@@ -60,6 +66,16 @@ impl Material {
             emit: emit,
         }
     }
+
+    pub fn isotropic_constant(emit: Vec3) -> Isotropic<texture::ConstantTexture> {
+        Material::isotropic(texture::constant_texture(emit))
+    }
+
+    pub fn isotropic<T: Texture>(t: T) -> Isotropic<T> {
+        Isotropic {
+            albedo: t,
+        }
+    }
 }
 
 pub trait Material {
@@ -73,14 +89,14 @@ pub trait Material {
 impl<T> Material for Lambertian<T>
     where T: Texture
 {
-    fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, _r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = hit.p + hit.normal + random_in_unit_sphere();
         let scattered = Ray::new(hit.p, target - hit.p);
         let attentuation = self.albedo.value(hit.u,hit.v,&hit.p);
         Some((attentuation, scattered))
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Option<Vec3> {
         None
     }
 }
@@ -98,7 +114,7 @@ impl Material for Metal {
         }
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Option<Vec3> {
         None
     }
 }
@@ -136,19 +152,32 @@ impl Material for Dielectric {
         Some((attentuation, out_ray))
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Option<Vec3> {
         None
     }
 }
 
 impl<T: Texture> Material for DiffuseLight<T> {
-    fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, _r: &Ray, _hit: &HitRecord) -> Option<(Vec3, Ray)> {
         None
     }
 
     // Light emitted
     fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
         Some(self.emit.value(u,v,p))
+    }
+}
+
+impl<T: Texture> Material for Isotropic<T> {
+    fn scatter(&self, _r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+        let scattered = Ray::new(hit.p, ::vec3::random_in_unit_sphere());
+        let attentuation = self.albedo.value(hit.u, hit.v, &hit.p);
+        return Some((attentuation, scattered))
+    }
+
+    // Light emitted
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3> {
+        None
     }
 }
 

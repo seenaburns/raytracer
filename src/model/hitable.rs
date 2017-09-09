@@ -3,7 +3,6 @@ use ray::Ray;
 use model::bvh::{AABB, BoundingBox};
 use util::Axis;
 use std::f64;
-use std::f64::consts::PI;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HitRecord {

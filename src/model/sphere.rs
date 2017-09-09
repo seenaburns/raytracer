@@ -2,7 +2,6 @@ use vec3::Vec3;
 use ray::Ray;
 use model::bvh::{AABB, BoundingBox};
 use model::hitable::{HitRecord, Hitable};
-use util::Axis;
 use std::f64::consts::PI;
 
 #[derive(Debug)]

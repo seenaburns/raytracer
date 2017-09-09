@@ -9,6 +9,7 @@ use raytracer::model::hitable::{flip_normals, translate, rotate};
 use raytracer::model::cube::Cube;
 use raytracer::model::rect::Rect;
 use raytracer::model::sphere::Sphere;
+use raytracer::model::constant_medium::ConstantMedium;
 use raytracer::shader::texture;
 use raytracer::shader::material::Material;
 use raytracer::util::Axis;
@@ -20,7 +21,7 @@ use std::sync::Arc;
 
 const NX: i32 = 200;
 const NY: i32 = 200;
-const NUM_SAMPLES: i32 = 500;
+const NUM_SAMPLES: i32 = 100;
 
 fn main() {
     // TODO: Read scene data from file, not from code
@@ -82,7 +83,9 @@ fn main() {
     let mat_red   = Material::lambertian_constant(Vec3::new(0.65,0.05,0.05));
     let mat_green = Material::lambertian_constant(Vec3::new(0.12,0.45,0.15));
     let mat_white = Material::lambertian_constant(Vec3::new(0.73,0.73,0.73));
-    let mat_light = Material::diffuse_light_constant(Vec3::new(15.0,15.0,15.0));
+    // let mat_light = Material::diffuse_light_constant(Vec3::new(15.0,15.0,15.0));
+    let mat_light = Material::diffuse_light_constant(Vec3::new(5.0,5.0,5.0));
+    let mat_iso   = Material::isotropic_constant(Vec3::new(1.0,1.0,1.0));
     let world: Box<Vec<Box<Renderable>>> = Box::new(vec![
         // Colored walls
         Box::new(Model::new(
@@ -95,7 +98,8 @@ fn main() {
         )),
         // Light
         Box::new(Model::new(
-            Rect::xz_rect(213.0,343.0,227.0,332.0,554.0),
+            // Rect::xz_rect(213.0,343.0,227.0,332.0,554.0), // small light
+            Rect::xz_rect(113.0,443.0,127.0,432.0,554.0), // big light
             mat_light.clone()
         )),
         // Ceiling
