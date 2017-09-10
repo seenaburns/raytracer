@@ -77,7 +77,7 @@ pub fn render (
                         // Gamma correct to 2: output color ^ (1/gamma) = x^(1/2) = sqrt
                         let c = c.map(&|x: f64| x.sqrt());
                         let c = c * 255.99;
-                        let c = c.map(&|x: f64| if x > 256.99 { 255.99 } else { x });
+                        let c = c.map(&|x: f64| if x > 255.99 { 255.99 } else { x });
 
                         // Save to buffer for image out
                         outbuf.push(c.x as i32);
