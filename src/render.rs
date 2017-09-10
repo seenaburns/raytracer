@@ -12,7 +12,7 @@ use vec3::{Vec3};
 use std::io::Write;
 use std::thread;
 use std::sync::Arc;
-use rand::random;
+use rand::*;
 
 const MIN_DISTANCE: f64 = 0.000001;
 const MAX_DISTANCE: f64 = 1000.0;
@@ -55,6 +55,7 @@ pub fn render (
         {
             let camera = camera.clone();
             let s = shareable_scene.clone();
+            let mut rng = XorShiftRng::from_seed([random::<u32>(); 4]);
             threads.push(thread::spawn(move || {
                 // Get horizontal slice, final thread takes any extra due to int truncation
                 let start = (ny/nthreads) * nth;
@@ -69,7 +70,7 @@ pub fn render (
                         let mut c = Vec3::new(0.0, 0.0, 0.0);
 
                         for _s in 0..spp {
-                            c += sample(i,j,nx,ny,&(**s),&(*camera));
+                            c += sample(i,j,nx,ny,&(**s),&(*camera), &mut rng);
                         }
                         let c = c / (spp as f64);
 
@@ -110,26 +111,26 @@ pub fn render (
     outbuf
 }
 
-fn sample(x: i32, y: i32, nx: i32, ny: i32, scene: &Renderable, camera: &Camera) -> Vec3 {
+fn sample(x: i32, y: i32, nx: i32, ny: i32, scene: &Renderable, camera: &Camera, rng: &mut XorShiftRng) -> Vec3 {
     // Get percent offset from bottom left corner
-    let u = (x as f64 + random::<f64>()) / (nx as f64);
-    let v = (y as f64 + random::<f64>()) / (ny as f64);
+    let u = (x as f64 + rng.gen::<f64>()) / (nx as f64);
+    let v = (y as f64 + rng.gen::<f64>()) / (ny as f64);
 
     // Make ray
-    let r = camera.get_ray(u, v);
+    let r = camera.get_ray(u, v, rng);
 
     // Get color
-    color(&r, scene, 0)
+    color(&r, scene, 0, rng)
 }
 
-fn color(r: &Ray, world: &Renderable, depth: i32) -> Vec3 {
+fn color(r: &Ray, world: &Renderable, depth: i32, rng: &mut XorShiftRng) -> Vec3 {
     match world.hit(r, MIN_DISTANCE, MAX_DISTANCE) {
         Some((h, material)) => {
             let emitted = material.emitted(h.u, h.v, &h.p).unwrap_or(Vec3::new(0.0,0.0,0.0));
             if depth < DEPTH_MAX {
-                match material.scatter(r, &h) {
+                match material.scatter(r, &h, rng) {
                     Some((attentuation, scattered)) => {
-                        emitted + attentuation * color(&scattered, world, depth+1)
+                        emitted + attentuation * color(&scattered, world, depth+1, rng)
                     }
                     // No scatter ray produced
                     None => emitted

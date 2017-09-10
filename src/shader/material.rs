@@ -3,7 +3,7 @@ use ray::Ray;
 use model::hitable::HitRecord;
 use shader::texture;
 use shader::texture::Texture;
-use rand::random;
+use rand::*;
 
 #[derive(Debug, Clone)]
 pub struct Lambertian<T: Texture> {
@@ -80,7 +80,7 @@ impl Material {
 
 pub trait Material {
     // Return attentuation vector and outgoing ray if produced
-    fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)>;
+    fn scatter(&self, r: &Ray, hit: &HitRecord, rng: &mut XorShiftRng) -> Option<(Vec3, Ray)>;
 
     // Light emitted
     fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Option<Vec3>;
@@ -89,8 +89,8 @@ pub trait Material {
 impl<T> Material for Lambertian<T>
     where T: Texture
 {
-    fn scatter(&self, _r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
-        let target = hit.p + hit.normal + random_in_unit_sphere();
+    fn scatter(&self, _r: &Ray, hit: &HitRecord, rng: &mut XorShiftRng) -> Option<(Vec3, Ray)> {
+        let target = hit.p + hit.normal + random_in_unit_sphere(rng);
         let scattered = Ray::new(hit.p, target - hit.p);
         let attentuation = self.albedo.value(hit.u,hit.v,&hit.p);
         Some((attentuation, scattered))
@@ -102,10 +102,10 @@ impl<T> Material for Lambertian<T>
 }
 
 impl Material for Metal {
-    fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r: &Ray, hit: &HitRecord, rng: &mut XorShiftRng) -> Option<(Vec3, Ray)> {
         let v = r.dir.normalized();
         let reflected = reflect(v, hit.normal);
-        let scattered = Ray::new(hit.p, reflected + random_in_unit_sphere() * self.fuzz);
+        let scattered = Ray::new(hit.p, reflected + random_in_unit_sphere(rng) * self.fuzz);
         let attentuation = self.albedo;
         if scattered.dir.dot(hit.normal) > 0.0 {
             Some((attentuation, scattered))
@@ -120,7 +120,7 @@ impl Material for Metal {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r: &Ray, hit: &HitRecord, rng: &mut XorShiftRng) -> Option<(Vec3, Ray)> {
         let reflected = reflect(r.dir, hit.normal);
         let attentuation = Vec3::new(1.0,1.0,1.0);
 
@@ -158,7 +158,7 @@ impl Material for Dielectric {
 }
 
 impl<T: Texture> Material for DiffuseLight<T> {
-    fn scatter(&self, _r: &Ray, _hit: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, _r: &Ray, _hit: &HitRecord, rng: &mut XorShiftRng) -> Option<(Vec3, Ray)> {
         None
     }
 
@@ -169,8 +169,8 @@ impl<T: Texture> Material for DiffuseLight<T> {
 }
 
 impl<T: Texture> Material for Isotropic<T> {
-    fn scatter(&self, _r: &Ray, hit: &HitRecord) -> Option<(Vec3, Ray)> {
-        let scattered = Ray::new(hit.p, ::vec3::random_in_unit_sphere());
+    fn scatter(&self, _r: &Ray, hit: &HitRecord, rng: &mut XorShiftRng) -> Option<(Vec3, Ray)> {
+        let scattered = Ray::new(hit.p, ::vec3::random_in_unit_sphere(rng));
         let attentuation = self.albedo.value(hit.u, hit.v, &hit.p);
         return Some((attentuation, scattered))
     }

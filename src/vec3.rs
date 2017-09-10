@@ -1,7 +1,7 @@
 extern crate rand;
 
 use std::ops::*;
-use rand::{Rand, Rng, random};
+use rand::*;
 use util::Axis;
 use std::f64;
 
@@ -102,6 +102,11 @@ impl Vec3 {
         ::util::approx_float_eq(a.y, b.y) &&
         ::util::approx_float_eq(a.z, b.z)
     }
+
+    // Random
+    pub fn random(rng: &mut XorShiftRng) -> Vec3 {
+        Vec3::new(rng.gen::<f64>(),rng.gen::<f64>(),rng.gen::<f64>())
+    }
 }
 
 // Vector operations
@@ -197,18 +202,18 @@ impl Div<f64> for Vec3 {
 }
 
 // Other
-pub fn random_in_unit_sphere() -> Vec3 {
+pub fn random_in_unit_sphere(rng: &mut XorShiftRng) -> Vec3 {
     loop {
-        let p = random::<Vec3>() * 2.0 - 1.0;
+        let p = Vec3::random(rng) * 2.0 - 1.0;
         if p.dot(p) <=  1.0 {
             return p
         }
     }
 }
 
-pub fn random_in_unit_disk() -> Vec3 {
+pub fn random_in_unit_disk(rng: &mut XorShiftRng) -> Vec3 {
     loop {
-        let p = (random::<Vec3>() * 2.0 - 1.0) * Vec3::new(1.0,1.0,0.0);
+        let p = (Vec3::random(rng) * 2.0 - 1.0) * Vec3::new(1.0,1.0,0.0);
         if p.dot(p) <=  1.0 {
             return p
         }

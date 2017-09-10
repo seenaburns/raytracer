@@ -1,5 +1,8 @@
+extern crate rand;
+
 use vec3::{Vec3, random_in_unit_disk};
 use ray::Ray;
+use rand::*;
 
 #[allow(unused)]
 pub struct Camera {
@@ -38,8 +41,8 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
-        let rd = random_in_unit_disk() * self.lens_radius;
+    pub fn get_ray(&self, s: f64, t: f64, rng: &mut XorShiftRng) -> Ray {
+        let rd = random_in_unit_disk(rng) * self.lens_radius;
         let offset = self.u * rd.x + self.v * rd.y;
         Ray {
             origin: self.origin + offset,
