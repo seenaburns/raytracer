@@ -16,6 +16,10 @@ impl Cube {
     pub fn new(dimensions: Vec3) -> Cube {
         let p0 = Vec3::new(0.0,0.0,0.0);
         let p1 = dimensions;
+        Cube::new_from_min_max(p0,p1)
+    }
+
+    pub fn new_from_min_max(p0: Vec3, p1: Vec3) -> Cube {
         let mut sides: Vec<Box<Hitable>> = Vec::with_capacity(6);
 
         sides.push(Box::new(Rect::xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z)));
@@ -30,6 +34,10 @@ impl Cube {
             max: p1,
             sides: sides
         }
+    }
+
+    pub fn unit_cube() -> Cube {
+        Cube::new_from_min_max(Vec3::new(-1.0,-1.0,-1.0), Vec3::new(1.0,1.0,1.0))
     }
 }
 

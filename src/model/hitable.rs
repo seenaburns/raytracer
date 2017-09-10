@@ -60,8 +60,9 @@ pub struct FlipNormals<H: Hitable> {
 
 impl<H: Hitable> Hitable for FlipNormals<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        self.h.hit(r, t_min, t_max).map(|x| {
-            HitRecord { normal: -x.normal, .. x }
+        self.h.hit(r, t_min, t_max).map(|mut x| {
+            x.normal = -x.normal;
+            x
         })
     }
 }
